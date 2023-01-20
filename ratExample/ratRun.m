@@ -35,7 +35,7 @@ MCMCPar.ABC = 'No';                     % Approximate Bayesian Computation or No
 
 % Problem specific parameter settings
 MCMCPar.n = length(fitPars);                    % Dimension of the problem (number of parameters to be estimated)
-MCMCPar.ndraw = 5e3;                            % Maximum number of function evaluations
+MCMCPar.ndraw = 5e5;                            % Maximum number of function evaluations
 MCMCPar.T = 1;                                  % Each Tth sample is collected in the chains
 MCMCPar.prior = 'LHS';                          % Latin Hypercube sampling (options, "LHS", "COV" and "PRIOR")
 MCMCPar.BoundHandling = 'Reflect';              % Boundary handling (options, "Reflect", "Bound", "Fold", and "None");
@@ -58,8 +58,14 @@ ParRange.maxn = fitConstr(:,2)';
 Measurement.MeasData = problemDef_cells{2}{:}(:,2);   % Contained in peoblemDef....
 Measurement.N = length(Measurement.MeasData);
 
+% Run DREAM
+[Sequences,X,Z,output,fx] = RAT_dream_zs(MCMCPar,ModelName,Extra,ParRange,Measurement);
 
-[Sequences,X,Z,output,fx] = dream_zs(MCMCPar,ModelName,Extra,ParRange,Measurement);
+
+% Post-process run....
+postprocDREAM;
+
+
 
 
 

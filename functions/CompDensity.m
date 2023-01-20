@@ -1,5 +1,6 @@
-function [p,log_p,fx,Best] = CompDensity(x,MCMCPar,Measurement,ModelName,Extra);
+function [p,log_p,fx,Best,SSE] = CompDensity(x,MCMCPar,Measurement,ModelName,Extra);
 % This function computes the density of each x value
+SSE = Inf;
 
 % Check whether to store the output of each model evaluation (function call)
 if Measurement.N > 0,
@@ -14,7 +15,7 @@ for ii = 1:MCMCPar.seq,
 
     % Call model to generate simulated data (Simulation results for the
     % Likihood function calculations
-    evalstr = ['fx(:,ii) = ',ModelName,'(x(ii,:),Extra);']; 
+    evalstr = ['[fx(:,ii),SSE] = ',ModelName,'(x(ii,:),Extra);']; 
     eval(evalstr);
 
     % If we have measured data --> calculate the residual (used by most likelihood functions)
@@ -44,7 +45,11 @@ for ii = 1:MCMCPar.seq,
     if MCMCPar.lik == 3, % Model returns vector of predictions
 
         % Derive the sum of squared error
-        SSR = sum(abs(Err).^2);
+        if isinf(SSE)
+            SSR = sum(abs(Err).^2);
+        else
+            SSR = SSE;
+        end
         MCMCPar.Best(MCMCPar.Best>SSR)=SSR;
         Best= MCMCPar.Best;
 

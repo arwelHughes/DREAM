@@ -1,4 +1,4 @@
-function out = ratFunc(params, extra)
+function [out,SSE] = ratFunc(params, extra)
 
 % RAT wrapper function for DREAm_zs..
 
@@ -16,7 +16,7 @@ problemDef = unpackparams(problemDef,controls);
 
 
 % disp('debug');
-%out = problem.calculations.sum_chi;
+SSE = problem.calculations.sum_chi;
 
 
 % Return the actual curve.... will have to think about how to do

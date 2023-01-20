@@ -6,7 +6,7 @@
 % DDD          DDD   RRR          RRR   EEE                   AAA AAA      MMMMMM       MMMMMM  %
 % DDD          DDD   RRR          RRR   EEE                  AAA   AAA     MMM MMM     MMM MMM  %
 % DDD          DDD   RRR          RRR   EEE                  AAA   AAA     MMM  MMM   MMM  MMM  %
-% DDD          DDD   RRRRRRRRRRRRRRRR   EEEEEEEEEEEEEEEE    AAA     AAA    MMM   MMM MMM   MMM  %
+% DDD          DDD   RRRRRRRRRRRRRRR    EEEEEEEEEEEEEEEE    AAA     AAA    MMM   MMM MMM   MMM  %
 % DDD          DDD   RRRRRRRRRRRRRRRR   EEEEEEEEEEEEEEEE    AAAAAAAAAAA    MMM    MMMM     MMM  %
 % DDD          DDD   RRR          RRR   EEE                AAA       AAA   MMM             MMM  %
 % DDD          DDD   RRR          RRR   EEE                AAA       AAA   MMM             MMM  %
