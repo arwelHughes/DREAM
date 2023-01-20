@@ -118,4 +118,16 @@ for ii = 1:MCMCPar.seq,
 
     end;
 
+    if MCMCPar.lik == 11                    % Specific for RAT - model already returns SSE
+
+        %SSR = sum(abs(Err).^2);
+        SSR = fx(:,ii);
+        MCMCPar.Best(MCMCPar.Best>SSR)=SSR;
+        Best= MCMCPar.Best;
+
+        % And retain in memory
+        p(ii,1) = -SSR; log_p(ii,1) = - Measurement.N/2 * log(SSR);
+
+    end
+
 end;
