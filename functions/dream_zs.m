@@ -43,7 +43,7 @@ end;
 Measurement.N = size(Measurement.MeasData,1);
 
 % Initialize waitbar
-h = waitbar(0,'Running DREAM_{(ZS)} - Please wait...');
+%h = waitbar(0,'Running DREAM_{(ZS)} - Please wait...');
 
 % Check whether to restart or not?
 if strcmp(MCMCPar.Restart,'No'),
@@ -210,7 +210,7 @@ while (Iter < MCMCPar.ndraw),
         Iter = Iter + MCMCPar.seq;
 
         % Update the waitbar
-        waitbar(Iter/MCMCPar.ndraw,h);
+%        waitbar(Iter/MCMCPar.ndraw,h);
         
     end;
 
@@ -253,14 +253,14 @@ while (Iter < MCMCPar.ndraw),
     % Check whether to save the ouput?
     if strcmp(MCMCPar.save,'Yes');    
     
-        % Initialize waitbar
-        close(h); h = waitbar(Iter/MCMCPar.ndraw,'Saving iterations to DREAM_{(ZS)}.mat - Please wait...');
-
-        % Store in memory
-        save DREAM_ZS.mat
-    
-        % Rename the waitbar
-        close(h); h = waitbar(Iter/MCMCPar.ndraw,'Running DREAM_{(ZS)} - Please wait...');
+%         % Initialize waitbar
+%         close(h); h = waitbar(Iter/MCMCPar.ndraw,'Saving iterations to DREAM_{(ZS)}.mat - Please wait...');
+% 
+%         % Store in memory
+%         save DREAM_ZS.mat
+%     
+%         % Rename the waitbar
+%         close(h); h = waitbar(Iter/MCMCPar.ndraw,'Running DREAM_{(ZS)} - Please wait...');
     end;
 
 end;
@@ -279,7 +279,7 @@ Sequences = Sequences(1:iloc,1:MCMCPar.n+2,1:MCMCPar.seq);
 % Then the history Z
 Z = Z(1:MCMCPar.m,1:MCMCPar.n+2);
 % Close the waitbar
-close(h);
+%close(h);
 % Write final line of warning file
 fid = fopen('warning_file.txt','w');
 fprintf(fid,'----------- End of DREAM_{(ZS)} warning file ----------\n');

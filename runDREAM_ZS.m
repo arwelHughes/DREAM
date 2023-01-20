@@ -154,15 +154,21 @@
 clc; close all; clear *;
 
 % Which example to run?
-example = 4.1;
+example = 4;
 
 global DREAM_dir EXAMPLE_dir
 
 % Store working directory and subdirectory containing the files needed to run this example
-DREAM_dir = pwd; EXAMPLE_dir = [pwd '\example_' num2str(example)];
+DREAM_dir = fullfile(pwd,'functions');  %EXAMPLE_dir = [pwd '\example_' num2str(example)];
+
+% Need to change path def of examples for different platforms....
+exampleName = ['example_' num2str(example)];
+EXAMPLE_dir = fullfile(pwd,'examples',exampleName);
+
 
 % Add subdirectory to search path
 addpath(EXAMPLE_dir);
+addpath(DREAM_dir);
 
 % Recommended parameter settings
 MCMCPar.seq = 3;                        % Number of Markov chains / sequences (for high dimensional and highly nonlinear problems, larger values work beter!!)
@@ -369,12 +375,13 @@ if example == 4,    % HYMOD rainfall - runoff model (coded in MATLAB)
 
     % Problem specific parameter settings
     MCMCPar.n = 5;                          % Dimension of the problem (number of parameters to be estimated)
-    MCMCPar.ndraw = 5e3;                  % Maximum number of function evaluations
+    MCMCPar.ndraw = 5e5;                  % Maximum number of function evaluations
     MCMCPar.T = 1;                          % Each Tth sample is collected in the chains
     MCMCPar.prior = 'LHS';                  % Latin Hypercube sampling (options, "LHS", "COV" and "PRIOR")
     MCMCPar.BoundHandling = 'Reflect';      % Boundary handling (options, "Reflect", "Bound", "Fold", and "None"); 
     MCMCPar.modout = 'Yes';                 % Return model (function) simulations of samples Yes or No)?
     MCMCPar.lik = 3;                        % Define likelihood function -- Sum of Squared Error
+    MCMCPar.Best = Inf;                     % Need to start with an initial 'Best' or model crashes
     %MCMCPar.lik == 1, Model returns posterior density
     %MCMCPar.lik == 2, Log-density function
     %MCMCPar.lik == 3, Model returns vector of predictions
