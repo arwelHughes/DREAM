@@ -17,7 +17,7 @@ fitConstr = problemDef.fitconstr;
 
 % Initialise the MCMC parameters....
 % Recommended parameter settings
-MCMCPar.seq = 3;                        % Number of Markov chains / sequences (for high dimensional and highly nonlinear problems, larger values work beter!!)
+MCMCPar.seq = 9;                        % Number of Markov chains / sequences (for high dimensional and highly nonlinear problems, larger values work beter!!)
 MCMCPar.DEpairs = 1;                    % Number of chain pairs to generate candidate points
 MCMCPar.nCR = 3;                        % Number of crossover values used
 MCMCPar.k = 10;                         % Thinning parameter for appending X to Z
@@ -35,11 +35,11 @@ MCMCPar.ABC = 'No';                     % Approximate Bayesian Computation or No
 
 % Problem specific parameter settings
 MCMCPar.n = length(fitPars);                    % Dimension of the problem (number of parameters to be estimated)
-MCMCPar.ndraw = 5e5;                            % Maximum number of function evaluations
+MCMCPar.ndraw = 5e4;                            % Maximum number of function evaluations
 MCMCPar.T = 1;                                  % Each Tth sample is collected in the chains
 MCMCPar.prior = 'LHS';                          % Latin Hypercube sampling (options, "LHS", "COV" and "PRIOR")
 MCMCPar.BoundHandling = 'Reflect';              % Boundary handling (options, "Reflect", "Bound", "Fold", and "None");
-MCMCPar.modout = 'Yes';                         % Return model (function) simulations of samples Yes or No)?
+MCMCPar.modout = 'No';                         % Return model (function) simulations of samples Yes or No)?
 MCMCPar.lik = 3;                                % Define likelihood function -- Sum of Squared Error ** will overload this ***
 MCMCPar.Best = Inf;                             % Need to start with an initial 'Best' or model crashes
 
