@@ -11,8 +11,10 @@ function [R_stat] = Gelman(Sequences,MCMCPar)
 
 % Compute the dimensions of Sequences
 [n,nrY,m] = size(Sequences);
+coder.varsize('varSeq',[Inf Inf],[1 1]);
+varSeq = ones(MCMCPar.seq,MCMCPar.n);
 
-if (n < 10),
+if (n < 10)
     % Set the R-statistic to a large value
     R_stat = -2 * ones(1,MCMCPar.n);
 else
@@ -23,9 +25,9 @@ else
     B = n * var(meanSeq);
     
     % Step 2: Compute the variance of the various sequences
-    for zz = 1:MCMCPar.seq,
+    for zz = 1:MCMCPar.seq
         varSeq(zz,:) = var(Sequences(:,:,zz));
-    end;
+    end
     
     % Step 2: Calculate the average of the within sequence variances
     W = mean(varSeq);
@@ -39,4 +41,4 @@ else
     % Step 5: Compute the R-statistic
     R_stat = sqrt((m + 1)/m * sigma2 ./ W - (n-1)/m/n);
     
-end;
+end

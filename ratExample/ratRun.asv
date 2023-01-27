@@ -23,21 +23,14 @@ MCMCPar.nCR = 3;                        % Number of crossover values used
 MCMCPar.k = 10;                         % Thinning parameter for appending X to Z
 MCMCPar.parallelUpdate = 0.9;           % Fraction of parallel direction updates
 MCMCPar.eps = 5e-2;                     % Perturbation for ergodicity
-MCMCPar.steps = 0; % inline('MCMCPar.ndraw/(20 * MCMCPar.seq)'); % Number of steps before calculating convergence diagnostics
-MCMCPar.m0 = 0; %inline('10 * MCMCPar.n');  % Initial size of matrix Z
+MCMCPar.steps = inline('MCMCPar.ndraw/(20 * MCMCPar.seq)'); % Number of steps before calculating convergence diagnostics
+MCMCPar.m0 = inline('10 * MCMCPar.n');  % Initial size of matrix Z
 MCMCPar.pJumpRate_one = 0.20;           % Probability of selecting a jumprate of 1 --> jump between modes
 MCMCPar.pCR = 'Yes';                    % Adaptive tuning of crossover values (Yes or No)
 MCMCPar.Restart = 'No';                 % Restart run (Yes or No)
 MCMCPar.modout = 'Yes';                 % Return model (function) simulations of samples Yes or No)?
-MCMCPar.save = 'Yes';                   % Save output during the run (Yes or No)
+MCMCPar.save = 'Yes';                    % Save output during the run (Yes or No)
 MCMCPar.ABC = 'No';                     % Approximate Bayesian Computation or Not?
-MCMCPar.m0 = 0;
-
-coder.varsize('MCMCPar.m',[Inf Inf],[1 1]);
-MCMCPar.m = 0;
-
-coder.varsize('MCMCPar.CR',[Inf Inf],[1 1]);
-MCMCPar.CR = cumsum((1/MCMCPar.nCR) * ones(1,MCMCPar.nCR));
 
 
 % Problem specific parameter settings
@@ -70,7 +63,7 @@ Measurement.N = length(Measurement.MeasData);
 
 
 % Post-process run....
-postprocDREAM;
+%postprocDREAM;
 
 
 

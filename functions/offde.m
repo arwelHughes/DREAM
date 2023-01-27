@@ -13,29 +13,38 @@ noise_x = MCMCPar.eps * (2 * rand(MCMCPar.seq,MCMCPar.n) - 1);
 % Initialize the delta update to zero
 delta_x = zeros(MCMCPar.seq,MCMCPar.n);
 
-if strcmp(Update,'Parallel_Direction_Update'), % PARALLEL DIRECTION UPDATE
+% Initialize JumpRate, rr and x
+JumpRate = 1;
+
+coder.varsize('rr',[Inf Inf],[1 1]);
+rr = [1 1; 1 1];
+
+coder.varsize('z',[Inf Inf],[1 1]);
+z = [];
+
+if strcmp(Update,'Parallel_Direction_Update') % PARALLEL DIRECTION UPDATE
 
     % Define which points of Zoff to use to generate jumps
     rr(1,1) = 1; rr(1,2) = rr(1,1) + DEversion(1) - 1; rr(1,3) = rr(1,2) + 1; rr(1,4) = rr(1,3) + DEversion(1) - 1;
     % Do this for each chain
-    for qq = 2:MCMCPar.seq,
+    for qq = 2:MCMCPar.seq
         % Define rr to be used for population evolution
         rr(qq,1) = rr(qq-1,4) + 1; rr(qq,2) = rr(qq,1) + DEversion(qq,1) - 1; rr(qq,3) = rr(qq,2) + 1; rr(qq,4) = ...
             rr(qq,3) + DEversion(qq,1) - 1;
-    end;
+    end
 
     % Each chain evolves using information from other chains to create offspring
-    for qq = 1:MCMCPar.seq,
+    for qq = 1:MCMCPar.seq
 
         % ------------ WHICH DIMENSIONS TO UPDATE? USE CROSSOVER ----------
         [i] = find(D(qq,1:MCMCPar.n) > (1-CR(qq,1)));
 
         % Update at least one dimension
-        if isempty(i), i = randperm(MCMCPar.n); i = i(1); end;
+        if isempty(i), i = randperm(MCMCPar.n); i = i(1); end
         % -----------------------------------------------------------------
 
         % Select the appropriate JumpRate and create a jump
-        if ( rand < (1 - MCMCPar.pJumpRate_one) ),
+        if ( rand < (1 - MCMCPar.pJumpRate_one) )
 
             % Now determine gamma, the jump factor
             switch MCMCPar.ABC
@@ -50,7 +59,7 @@ if strcmp(Update,'Parallel_Direction_Update'), % PARALLEL DIRECTION UPDATE
                     % Turner (2012) paper -- CU[0.5,1]
                     JumpRate = 0.5 + rand/2;
 
-            end;
+            end
 
             % Produce the difference of the pairs used for population evolution
             delta = sum(Zoff(rr(qq,1):rr(qq,2),1:MCMCPar.n) - Zoff(rr(qq,3):rr(qq,4),1:MCMCPar.n),1);
@@ -63,11 +72,11 @@ if strcmp(Update,'Parallel_Direction_Update'), % PARALLEL DIRECTION UPDATE
             delta = Zoff(rr(qq,1),1:MCMCPar.n) - Zoff(rr(qq,4),1:MCMCPar.n);
             % Now jumprate to facilitate jumping from one mode to the other in all dimensions
             delta_x(qq,1:MCMCPar.n) = JumpRate * delta;
-        end;
-    end;
-end;
+        end
+    end
+end
 
-if strcmp(Update,'Snooker_Update'), % SNOOKER UPDATE
+if strcmp(Update,'Snooker_Update') % SNOOKER UPDATE
     % Determine the number of rows of Zoff
     NZoff = size(Zoff,1);
     % Define rr
@@ -75,7 +84,9 @@ if strcmp(Update,'Snooker_Update'), % SNOOKER UPDATE
     % Define JumpRate -- uniform rand number between 1.2 and 2.2
     Gamma = 1.2 + rand;
     % Loop over the individual chains
-    for qq = 1:MCMCPar.seq,
+
+    
+    for qq = 1:MCMCPar.seq
         % Define which points of Zoff z_r1, z_r2
         zR1 = Zoff(rr(qq,1),1:MCMCPar.n); zR2 = Zoff(rr(qq,2),1:MCMCPar.n);
         % Now select z from Zoff; z cannot be zR1 and zR2
@@ -90,21 +101,21 @@ if strcmp(Update,'Snooker_Update'), % SNOOKER UPDATE
         delta_x(qq,1:MCMCPar.n) = Gamma * zP;
         % Update CR because we only consider full dimensional updates
         CR(qq,1) = 1;
-    end;
-end;
+    end
+end
 
 % Now propose new x
 xnew = xold + delta_x;
 
 % Define alfa_s
-if strcmp(Update,'Snooker_Update'),
+if strcmp(Update,'Snooker_Update')
     % Determine Euclidean distance
     alfa_s = [(sum((xnew - z).^2,2)./sum((xold - z).^2,2)).^((MCMCPar.n-1)/2)];
 else
     alfa_s = ones(MCMCPar.seq,1);
-end;
+end
 
 % Do boundary handling -- what to do when points fall outside bound
-if strcmp(MCMCPar.BoundHandling,'None') == 0;
+if strcmp(MCMCPar.BoundHandling,'None') == 0
     [xnew] = BoundaryHandling(xnew,ParRange,MCMCPar.BoundHandling);
-end;
+end
