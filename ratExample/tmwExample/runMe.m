@@ -1,19 +1,10 @@
 %% Test of DREAM with RAT
 clear
-
-% Make the problem
-problem = r1ToProjectClass('defaultProject.mat');
-controls = controlsDef();
-
-% Split it up into the constituents....
-[problemDef,problemDef_cells,problemDef_limits,priors,controls] = RatParseClassToStructs_new(problem,controls);
-
-% Pack to get fitpars and constraints...
-[problemDef,fitNames] = packparams(problemDef,problemDef_cells,problemDef_limits,controls.checks);
+% addpath(fullfile(pwd,'functions'));
 
 % Pull out our fitting parameters....
-fitPars = problemDef.fitpars;
-fitConstr = problemDef.fitconstr;
+fitPars = [0.5 0.5 0.5];
+fitConstr = [0 1 ; 0 1 ; 0 1];
 
 % Initialise the MCMC parameters....
 % Recommended parameter settings
@@ -50,10 +41,7 @@ MCMCPar.modout = 'No';                         % Return model (function) simulat
 MCMCPar.lik = 3;                                % Define likelihood function -- Sum of Squared Error ** will overload this ***
 MCMCPar.Best = Inf;                             % Need to start with an initial 'Best' or model crashes
 
-Extra.problemDef = problemDef;
-Extra.problemDef_cells = problemDef_cells;
-Extra.problemDef_limits = problemDef_limits;
-Extra.controls = controls;
+Extra = [];
 
 % Define modelName
 ModelName = 'ratFunc';
@@ -62,18 +50,17 @@ ModelName = 'ratFunc';
 ParRange.minn = fitConstr(:,1)';        % Note transpose - need to be row vectors..
 ParRange.maxn = fitConstr(:,2)';
 
-Measurement.MeasData = problemDef_cells{2}{:}(:,2);   % Contained in peoblemDef....
+Measurement.MeasData = ones(100,1);
 Measurement.N = length(Measurement.MeasData);
 
 % Run DREAM
-[Sequences,X,Z,out_CR,out_AR,out_R_stat,output,fx] = RAT_dream_zs(MCMCPar,Extra,ParRange,Measurement);
-out.CR = out_CR;
-out.AR = out_AR;
-out.
-
+[Sequences,X,Z,out_CR,out_R_stat,out_AR,fx] = RAT_dream_zs(MCMCPar,Extra,ParRange,Measurement);
+output.CR = out_CR;
+output.R_stat = out_R_stat;
+output.AR = out_AR;
 
 % Post-process run....
-postprocDREAM;
+%postprocDREAM;
 
 
 

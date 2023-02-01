@@ -27,7 +27,7 @@ pCR = (1/MCMCPar.nCR) * ones(1,MCMCPar.nCR);
 [CR,lCR] = GenCR(MCMCPar,pCR); 
 
 % Check whether we store all the model simulations or not
-if strcmp(MCMCPar.modout,'Yes')
+if strcmp(MCMCPar.modout,'Yes');
     if Measurement.N > 0
         % Define matrix with model simulations
         fx = zeros(Measurement.N,floor(MCMCPar.ndraw/MCMCPar.T));

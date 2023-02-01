@@ -37,9 +37,9 @@ end
 
 end
 
-% function [f,er] = ratFunc(x,E)
-% % Dummy test func
-%     f = 1; er = 1;
-% 
-% 
-% end
+function [f,er] = ratFunc(x,E)
+% Dummy test func
+    f = 1; er = 1;
+
+
+end

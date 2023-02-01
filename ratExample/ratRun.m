@@ -65,12 +65,25 @@ ParRange.maxn = fitConstr(:,2)';
 Measurement.MeasData = problemDef_cells{2}{:}(:,2);   % Contained in peoblemDef....
 Measurement.N = length(Measurement.MeasData);
 
-% Run DREAM
-[Sequences,X,Z,output,fx] = RAT_dream_zs(MCMCPar,Extra,ParRange,Measurement);
+% % Do some initial checking....
+% if MCMCPar.m0 < (2 * MCMCPar.DEpairs * MCMCPar.seq)
+%     % Warning -- not enough chains to do sampling -- increase number of chains!
+%     zSize = (2 * MCMCPar.DEpairs * MCMCPar.seq);
+%     fprintf('DREAM_{(ZS)} WARNING: size of Z not sufficient -> Increase MCMCPar.m0 to at least %g \n', zSize);   
+%     % Stop DREAM
+%     Sequences = []; X = []; Z = [];
+%     % And return to main program
+%     return;
+% end
 
+% Run DREAM
+[Sequences,X,Z,out_CR,out_R_stat,out_AR,fx] = RAT_dream_zs_mex(MCMCPar,Extra,ParRange,Measurement);
+output.CR = out_CR;
+output.R_stat = out_R_stat;
+output.AR = out_AR;
 
 % Post-process run....
-postprocDREAM;
+%postprocDREAM;
 
 
 

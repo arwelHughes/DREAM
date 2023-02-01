@@ -92,23 +92,18 @@ if (length(n)~=1) || (fix(n) ~= n) || (n < 0)
    return,
 end
 
-P = sum(p,2);
+P = sum(p);
 %if P ~= 1,
 %    error('The sum of the input probabilities must be equal 1.')
 %    return,
 %end;
 
 coder.varsize('X',[Inf Inf],[1 1]);
-X = ones(size(p,1),size(p,2));
+X = [1 1];
 
 for i = 1:m
     o = ones(1,n);
-
-    % Debug.....
-    fprintf('@Debug@ Size p = [%g %g]; Size P = [%g %g] \n', size(p,1), size(p,2), size(P,1), size(P,2));
-
-    mat = p./P;
-    s = cumsum(mat);
+    s = cumsum(p/P);
     r = rand(1,n);
     for j = 1:length(p)
         o = o + (r > s(j)); 
@@ -117,8 +112,6 @@ for i = 1:m
         X(i,j) = sum(o == j); 
     end
 end
-
-fprintf('@Debug@ Size X is [%g %g] \n', size(X,1), size(X,2));
 
 Y = X./n;
 

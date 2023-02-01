@@ -378,10 +378,10 @@ if exist('Measurement') == 1,
     PredInt = 95;
     
     % Derive the rspective 95% simulation uncertainty ranges (can change 95 to any other value!)
-    [par_unc,tot_unc] = predMCMC(Pars,RMSE_MAP,ModelName,Measurement,MCMCPar,Extra,PredInt,fx);
+%    [par_unc,tot_unc] = predMCMC(Pars,RMSE_MAP,ModelName,Measurement,MCMCPar,Extra,PredInt,fx);
 
     % Also works when --> then "fx" is assumed empty and PredInt = 95% (default)
-    % [par_unc,tot_unc] = predMCMC(Pars,RMSE_MAP,ModelName,Measurement,MCMCPar,Extra);
+    [par_unc,tot_unc] = predMCMC(Pars,RMSE_MAP,ModelName,Measurement,MCMCPar,Extra);
     
     % Open new figure
     figure(fig_number),

@@ -11,7 +11,15 @@ MCMCPar.m0 = 10 * MCMCPar.n; %MCMCPar.m0(MCMCPar);
 % fprintf(fid,'-------------- DREAM_{(ZS)} warning file --------------\n');
 
 % Check that MCMCPar.m is large enough to create offspring
-
+% if MCMCPar.m0 < (2 * MCMCPar.DEpairs * MCMCPar.seq)
+%     % Warning -- not enough chains to do sampling -- increase number of chains!
+%     zSize = (2 * MCMCPar.DEpairs * MCMCPar.seq);
+%     fprintf('DREAM_{(ZS)} WARNING: size of Z not sufficient -> Increase MCMCPar.m0 to at least %g \n', zSize);   
+%     % Stop DREAM
+%     Sequences = []; X = []; Z = [];
+%     % And return to main program
+%     return;
+% end
     
 % Check how many input variables
 if nargin < 4
@@ -152,22 +160,16 @@ tic;
 
 % Move prior population to posterior population ...
 
-% Use a for loop....
-loops = floor(MCMCPar.ndraw / MCMCPar.seq);
-%totalDraw = 
 
-for i = Iter:MCMCPar.seq:loops*Iter
-%while (Iter < MCMCPar.ndraw)
+while (Iter < MCMCPar.ndraw)
 
     % Check that exactly MCMCPar.ndraw are done (uneven numbers this is impossible, but as close as possible)
     if (MCMCPar.steps * MCMCPar.seq) > MCMCPar.ndraw - Iter 
-
-        break
         % Change MCMCPar.steps in last iteration 
-%         MCMCPar.steps = ceil((MCMCPar.ndraw - Iter)/MCMCPar.seq);
-%         % Warning -- not enough chains to do sampling -- increase number of chains!
-%         fprintf('DREAM_{(ZS)} WARNING: Changed MCMCPar.steps = %g at %g function evaluations \n',MCMCPar.steps, Iter);
-        % Now print warning to screen and to file
+        MCMCPar.steps = ceil((MCMCPar.ndraw - Iter)/MCMCPar.seq);
+        % Warning -- not enough chains to do sampling -- increase number of chains!
+        fprintf('DREAM_{(ZS)} WARNING: Changed MCMCPar.steps = %g at %g function evaluations \n',MCMCPar.steps, Iter);
+% %        Now print warning to screen and to file
 %         fid = fopen('warning_file.txt','w');
 %         fprintf(evalstr); fprintf(fid,evalstr);    
     end

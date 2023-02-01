@@ -1,7 +1,7 @@
 % RAT_DREAM_ZS_SCRIPT   Generate MEX-function RAT_dream_zs_mex from
 %  RAT_dream_zs.
 % 
-% Script generated from project 'RAT_dream_zs.prj' on 25-Jan-2023.
+% Script generated from project 'RAT_dream_zs.prj' on 27-Jan-2023.
 % 
 % See also CODER, CODER.CONFIG, CODER.TYPEOF, CODEGEN.
 
@@ -79,7 +79,7 @@ ARG_4 = coder.typeof(0,[1 2]);
 ARGS_1_2_problemDef_cells{4} = coder.typeof({ARG_4}, [1 Inf],[0 1]);
 ARG_5 = coder.typeof(0,[1 Inf],[0 1]);
 ARGS_1_2_problemDef_cells{5} = coder.typeof({ARG_5}, [1 Inf],[0 1]);
-ARG_6 = coder.typeof(0,[1 5]);
+ARG_6 = coder.typeof(0,[1 5],[1 1]);
 ARGS_1_2_problemDef_cells{6} = coder.typeof({ARG_6}, [Inf  1],[1 0]);
 ARG_7 = coder.typeof('X',[1 Inf],[0 1]);
 ARGS_1_2_problemDef_cells{7} = coder.typeof({ARG_7}, [1 Inf],[0 1]);

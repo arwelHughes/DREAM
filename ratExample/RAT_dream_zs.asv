@@ -1,4 +1,4 @@
-function [Sequences,X,Z,out,fx] = RAT_dream_zs(MCMCPar,Extra,ParRange,Measurement)
+function [Sequences,X,Z,out_CR,out_R_stat,out_AR,fx] = RAT_dream_zs(MCMCPar,Extra,ParRange,Measurement)
 
 % Calculate MCMCPar.steps
 MCMCPar.steps = floor(MCMCPar.ndraw/(20 * MCMCPar.seq)); %floor(MCMCPar.steps(MCMCPar)); 
@@ -38,6 +38,17 @@ if nargin < 2
     Extra = [];
 end
 
+[MCMCPar,pCR,lCR,CR,fx,m_func,Sequences,Z,Table_JumpRate] = InitMCMC(MCMCPar,Measurement);
+
+% Initialise 'out'
+Nelem = floor(MCMCPar.ndraw/MCMCPar.seq) + 1;
+out_CR = zeros(floor(Nelem/MCMCPar.steps),MCMCPar.nCR+1);
+out_AR = zeros(floor(Nelem/MCMCPar.steps),2);
+out_R_stat = zeros(floor(Nelem/MCMCPar.steps),MCMCPar.n+1);
+%out = struct('CR',CR,'AR',AR,'R_stat',R_stat);
+out_AR(1,1:2) = [MCMCPar.seq -1];
+
+
 %Initialise 'iteration'    
 iteration = 2; 
 % Initialize Iter 
@@ -59,10 +70,8 @@ coder.varsize('Xfx',[Inf Inf],[1 1]);
 Xfx = [0 0];
 
 
-[MCMCPar,pCR,lCR,CR,fx,m_func,Sequences,Z,Table_JumpRate] = InitMCMC(MCMCPar,Measurement);
-
 % Check whether to restart or not?
-if strcmp(MCMCPar.Restart,'No')
+%if strcmp(MCMCPar.Restart,'No')
 
     % Set random number generator
     rng('default');
@@ -130,19 +139,19 @@ if strcmp(MCMCPar.Restart,'No')
     Sequences(1,1:MCMCPar.n+2,1:MCMCPar.seq) = reshape(X',1,MCMCPar.n+2,MCMCPar.seq); 
     
     % Save N_CR in memory
-    out.CR(1,1:MCMCPar.nCR+1) = [Iter pCR];
+    out_CR(1,1:MCMCPar.nCR+1) = [Iter pCR];
 
     % Compute the R-statistic of Gelman and Rubin
-    [out.R_stat(1,1:MCMCPar.n+1)] = [Iter Gelman(Sequences(1,1:MCMCPar.n,1:MCMCPar.seq),MCMCPar)];
+    [out_R_stat(1,1:MCMCPar.n+1)] = [Iter Gelman(Sequences(1,1:MCMCPar.n,1:MCMCPar.seq),MCMCPar)];
 
-else % If a restart run is being done: just load the out from the previous ongoing trial
+%else % If a restart run is being done: just load the out from the previous ongoing trial
 
       % TODO - Fix the reload functionality
 %     load DREAM_ZS.mat; 
 %     %load GWF1P81R04.mat
 %     MCMCPar.ndraw = 2 * MCMCPar.ndraw;
 
-end
+%end
 
 ETime=toc/3600;                           %Running time
 RTime=(MCMCPar.ndraw*ETime/Iter)-ETime;   %Remaining time
@@ -150,6 +159,7 @@ fprintf('Iter: %g   SSE= %g   Time= %g min   Elapsed Time= %g hr    Remaining Ti
 tic;
 
 % Move prior population to posterior population ...
+%assert(Iter < MCMCPar.ndraw)
 while (Iter < MCMCPar.ndraw)
 
     % Check that exactly MCMCPar.ndraw are done (uneven numbers this is impossible, but as close as possible)
@@ -263,10 +273,10 @@ while (Iter < MCMCPar.ndraw)
     end
 
     % Store Important Diagnostic information -- Acceptance Rate
-    out.AR(iteration,1:2) = [Iter 100 * totaccept/(MCMCPar.steps * MCMCPar.seq)];
+    out_AR(iteration,1:2) = [Iter 100 * totaccept/(MCMCPar.steps * MCMCPar.seq)];
 
     % Store Important Diagnostic information -- Probability of individual crossover values
-    out.CR(iteration,1:MCMCPar.nCR+1) = [Iter pCR];
+    out_CR(iteration,1:MCMCPar.nCR+1) = [Iter pCR];
 
     % Check whether to update individual pCR values
     if (Iter <= 0.1 * MCMCPar.ndraw)
@@ -283,7 +293,7 @@ while (Iter < MCMCPar.ndraw)
     start_idx = max(1,floor(0.5*iloc)); end_idx = iloc;
     
     % Compute the R-statistic using 50% burn-in from Sequences
-    [out.R_stat(iteration,1:MCMCPar.n+1)] = [Iter Gelman(Sequences(start_idx:end_idx,1:MCMCPar.n,1:MCMCPar.seq),MCMCPar)];
+    [out_R_stat(iteration,1:MCMCPar.n+1)] = [Iter Gelman(Sequences(start_idx:end_idx,1:MCMCPar.n,1:MCMCPar.seq),MCMCPar)];
 
     % Update the iteration
     iteration = iteration + 1;
@@ -312,11 +322,23 @@ end
 % Variables have been pre-allocated in memory --> might need remove zeros
 
 % Start with CR
-out.CR = out.CR(1:iteration-1,1:size(pCR,2)+1);
+% - not sure what's going on with out_CR.... bit of a hack here...
+
+%out_CR = [];
+out_CR = out_CR(1:iteration-1,1:size(pCR,2)+1);
+
 % Then R_stat
-out.R_stat = out.R_stat(1:iteration-1,1:MCMCPar.n+1);
+out_R_stat = out_R_stat(1:iteration-1,1:MCMCPar.n+1);
 % Then AR
-out.AR = out.AR(1:iteration-1,1:2);
+out_AR = out_AR(1:iteration-1,1:2);
+
+out = struct('CR',out_CR,'R_stat',out_R_stat,'AR',out_AR);
+
+% Test....
+% out_CR = 1; out_AR = 1; out_R_stat = 1;
+
+
+
 % Then Sequences
 Sequences = Sequences(1:iloc,1:MCMCPar.n+2,1:MCMCPar.seq);
 % Then the history Z
@@ -331,14 +353,16 @@ Z = Z(1:MCMCPar.m,1:MCMCPar.n+2);
 % % Open the warning file
 % edit warning_file.txt
 
+%out = struct('CR',out_CR,'AR',out_AR,'R_stat',out_R_stat);
+
 % If five out arguments are requested then return fx
-if nargout == 5
-    if strcmp(MCMCPar.modout,'Yes')
-       % remove zeros and tranpose fx --> easier to use
-       fx = fx(:,1:m_func)';
-    else
-       fx = [];
-    end
-end
+% if nargout == 5
+%     if strcmp(MCMCPar.modout,'Yes')
+%        % remove zeros and tranpose fx --> easier to use
+%        fx = fx(:,1:m_func)';
+%     else
+%        fx = [];
+%     end
+% end
 
 % -------------------------------------------------------------------------
