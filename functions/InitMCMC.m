@@ -20,25 +20,24 @@ Nelem = floor(MCMCPar.ndraw/MCMCPar.seq) + 1;
 % output.R_stat = zeros(floor(Nelem/MCMCPar.steps),MCMCPar.n+1);
 
 % Calculate multinomial probabilities of each of the nCR CR values
-coder.varsize('pCR',[Inf Inf],[1 1]);
 pCR = (1/MCMCPar.nCR) * ones(1,MCMCPar.nCR);
 
 % Calculate the actual CR values based on p
 [CR,lCR] = GenCR(MCMCPar,pCR); 
 
 % Check whether we store all the model simulations or not
-if strcmp(MCMCPar.modout,'Yes')
-    if Measurement.N > 0
-        % Define matrix with model simulations
-        fx = zeros(Measurement.N,floor(MCMCPar.ndraw/MCMCPar.T));
-        % Set m_func
-        m_func = MCMCPar.seq;
-    else
-        fx = []; m_func = [];
-    end;
-else
+% if strcmp(MCMCPar.modout,'Yes')
+%     if Measurement.N > 0
+%         % Define matrix with model simulations
+%         fx = zeros(Measurement.N,floor(MCMCPar.ndraw/MCMCPar.T));
+%         % Set m_func
+%         m_func = MCMCPar.seq;
+%     else
+%         fx = []; m_func = [];
+%     end;
+% else
     fx = []; m_func = [];
-end;
+% end;
 
 % Initialize Sequences with zeros
 Sequences = zeros(floor(Nelem/MCMCPar.T),MCMCPar.n+2,MCMCPar.seq);

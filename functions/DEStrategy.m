@@ -7,7 +7,7 @@ p_pair = (1/MCMCPar.DEpairs) * ones(1,MCMCPar.DEpairs); p_pair = cumsum(p_pair);
 Z = rand(MCMCPar.seq,1);
 % Select number of pairs
 coder.varsize('DEversion',[Inf Inf],[1 1]);
-DEversion = [1 1];
+DEversion = zeros(MCMCPar.seq,1);
 
 for qq = 1:MCMCPar.seq
     z = find(Z(qq,1)>p_pair); 

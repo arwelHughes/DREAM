@@ -30,13 +30,35 @@ if nargin < 2
     Extra = [];
 end
 
-[MCMCPar,pCR,lCR,CR,fx,m_func,Sequences,Z,Table_JumpRate] = InitMCMC(MCMCPar,Measurement);
+
+% Initialise Variables...
+coder.varsize('X',[Inf Inf],[1 1]);
+X = [0 0];
+
+coder.varsize('delta_tot',[1 Inf],[0 1]);
+delta_tot = zeros(1,MCMCPar.nCR);
+
+coder.varsize('Xfx',[Inf Inf],[1 1]);
+Xfx = [0 0];
+
+coder.varsize('pCR',[Inf Inf],[1 1]);
+coder.varsize('lCR',[Inf Inf],[1 1]);
+
+[MCMCPar,pCR,lCR,CR,~,m_func,Sequences,Z,Table_JumpRate] = InitMCMC(MCMCPar,Measurement);
 
 % Initialise 'out'
 Nelem = floor(MCMCPar.ndraw/MCMCPar.seq) + 1;
-out_CR = zeros(floor(Nelem/MCMCPar.steps),MCMCPar.nCR+1);
-out_AR = zeros(floor(Nelem/MCMCPar.steps),2);
-out_R_stat = zeros(floor(Nelem/MCMCPar.steps),MCMCPar.n+1);
+
+coder.varsize('out_CR',[Inf Inf],[1 1]);
+out_CR = zeros(ceil(Nelem/MCMCPar.steps),MCMCPar.nCR+1);
+
+coder.varsize('out_AR',[Inf Inf],[1 1]);
+out_AR = zeros(ceil(Nelem/MCMCPar.steps),2);
+
+coder.varsize('out_R_stat',[Inf Inf],[1 1]);
+out_R_stat = zeros(ceil(Nelem/MCMCPar.steps),MCMCPar.n+1);
+
+
 %out = struct('CR',CR,'AR',AR,'R_stat',R_stat);
 out_AR(1,1:2) = [MCMCPar.seq -1];
 
@@ -52,14 +74,7 @@ Measurement.N = size(Measurement.MeasData,1);
 % Initialize waitbar
 %h = waitbar(0,'Running DREAM_{(ZS)} - Please wait...');
 
-% Initialise Variables...
-coder.varsize('X',[Inf Inf],[1 1]);
-X = [0 0];
 
-delta_tot = zeros(1,MCMCPar.nCR);
-
-coder.varsize('Xfx',[Inf Inf],[1 1]);
-Xfx = [0 0];
 
 
 % Check whether to restart or not?
@@ -121,11 +136,17 @@ Xfx = [0 0];
 
     % Calculate posterior density associated with each value of X
     tic
-    [p,log_p,fx(:,1:MCMCPar.seq),MCMCPar.Best,out_SSE] = ratCompDensity(X,MCMCPar,Measurement,Extra);
+    %[p,log_p,fx(:,1:MCMCPar.seq),MCMCPar.Best,out_SSE] = ratCompDensity(X,MCMCPar,Measurement,Extra);
+    p = zeros(MCMCPar.seq,1);
+    log_p = zeros(MCMCPar.seq,1);
+    coder.varsize('p',[Inf 1],[1 0]);
+    coder.varsize('log_p',[Inf 1],[1 0]);
+
+    [p,log_p,MCMCPar.Best,out_SSE] = ratCompDensity(X,MCMCPar,Measurement,Extra);
 
     % Append X with information about posterior density (or transformation thereof) -- also store model simulations of X
     X = [X p log_p]; 
-    Xfx = fx; 
+    %Xfx = fx; 
 
     % Set the first point of each of the MCMCPar.seq sequences equal to the initial X values 
     Sequences(1,1:MCMCPar.n+2,1:MCMCPar.seq) = reshape(X',1,MCMCPar.n+2,MCMCPar.seq); 
@@ -200,7 +221,7 @@ for i = Iter:MCMCPar.seq:loops*Iter
         [xnew,CR(:,gen_number),alfa_s] = offde(xold,Zoff,CR(:,gen_number),MCMCPar,Update,Table_JumpRate,ParRange);
 
         % Compute the likelihood of each proposal in each chain
-        [p_xnew,log_p_xnew,fx_new,MCMCPar.Best,out_SSE] = ratCompDensity(xnew,MCMCPar,Measurement,Extra);
+        [p_xnew,log_p_xnew,MCMCPar.Best,out_SSE] = ratCompDensity(xnew,MCMCPar,Measurement,Extra);
 
         % Calculate the Metropolis ratio
         [accept] = metrop(MCMCPar,xnew,log_p_xnew,xold,log_p_xold,alfa_s);
@@ -208,7 +229,7 @@ for i = Iter:MCMCPar.seq:loops*Iter
         % And update X and the model simulation
         idx_X = find(accept == 1); 
         X(idx_X,1:MCMCPar.n+2) = [xnew(idx_X,1:MCMCPar.n) p_xnew(idx_X) log_p_xnew(idx_X)]; 
-        Xfx(:,idx_X) = fx_new(:,idx_X);
+        %Xfx(:,idx_X) = fx_new(:,idx_X);
 
         % Check whether to add the current points to the chains or not?
         if (T == MCMCPar.T)
@@ -219,13 +240,13 @@ for i = Iter:MCMCPar.seq:loops*Iter
             Sequences(iloc,1:MCMCPar.n+2,1:MCMCPar.seq) = thisSample;
 
             % Check whether to store the simulation results of the function evaluations
-            if Measurement.N > 0
-                if strcmp(MCMCPar.modout,'Yes')
-                    fx(:,m_func + 1 : m_func + MCMCPar.seq) = Xfx(:,1:MCMCPar.seq);
-                    % Update m_func
-                    m_func = m_func + MCMCPar.seq;
-                end
-            end
+%             if Measurement.N > 0
+%                 if strcmp(MCMCPar.modout,'Yes')
+%                     fx(:,m_func + 1 : m_func + MCMCPar.seq) = Xfx(:,1:MCMCPar.seq);
+%                     % Update m_func
+%                     m_func = m_func + MCMCPar.seq;
+%                 end
+%             end
             % And set the T to 0
             T = 0;
         end
@@ -328,6 +349,7 @@ out_CR = out_CR(1:iteration-1,1:size(pCR,2)+1);
 
 % Then R_stat
 out_R_stat = out_R_stat(1:iteration-1,1:MCMCPar.n+1);
+
 % Then AR
 out_AR = out_AR(1:iteration-1,1:2);
 
@@ -363,5 +385,7 @@ Z = Z(1:MCMCPar.m,1:MCMCPar.n+2);
 %        fx = [];
 %     end
 % end
+
+fx = [];
 
 % -------------------------------------------------------------------------

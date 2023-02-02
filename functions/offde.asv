@@ -13,14 +13,14 @@ noise_x = MCMCPar.eps * (2 * rand(MCMCPar.seq,MCMCPar.n) - 1);
 % Initialize the delta update to zero
 delta_x = zeros(MCMCPar.seq,MCMCPar.n);
 
-% Initialize JumpRate, rr and z
+% Initialize JumpRate, rr and x
 JumpRate = 1;
 
 coder.varsize('rr',[Inf Inf],[1 1]);
 rr = zeros(MCMCPar.seq,4);
 
 coder.varsize('z',[Inf Inf],[1 1]);
-z = zeros(MCMCPar.seq,MCMCPar.n);
+z = [];
 
 switch lower(Update)
     case 'parallel_direction_update'

@@ -8,9 +8,8 @@ L2 = [0 cumsum(L)];
 % Then select which candidate points are selected with what CR
 r = randperm(MCMCPar.seq * MCMCPar.steps);
 
-
-coder.varsize('CR',[Inf Inf],[1 1]);
-CR = [1 1];
+CR = zeros(MCMCPar.seq * MCMCPar.steps,1);
+coder.varsize('CR',[Inf 1],[1 0]);
 
 % Then generate CR values for each chain
 for zz = 1:MCMCPar.nCR
@@ -28,4 +27,4 @@ for zz = 1:MCMCPar.nCR
 end
 
 % Now reshape CR
-outCR = reshape(CR,MCMCPar.seq,MCMCPar.steps);
+outCR = reshape(CR(:,1),MCMCPar.seq,MCMCPar.steps);

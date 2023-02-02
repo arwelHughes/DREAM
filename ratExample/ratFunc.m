@@ -1,4 +1,4 @@
-function [out,SSE] = ratFunc(params, extra)
+function SSE = ratFunc(params, extra)
 
 % RAT wrapper function for DREAm_zs..
 
@@ -21,6 +21,6 @@ SSE = problem.calculations.sum_chi;
 
 % Return the actual curve.... will have to think about how to do
 % multi-contrasts...
-out = result{1}{:}(:,2);
+%out = result{1}{:}(:,2);
 
 end
