@@ -100,7 +100,7 @@ Measurement.N = size(Measurement.MeasData,1);
 
     % Calculate posterior density associated with each value of X
     tic
-    [p,log_p,fx(:,1:MCMCPar.seq),MCMCPar.Best,out_SSE] = CompDensity(X,MCMCPar,Measurement,ModelName,Extra);
+    [p,log_p,MCMCPar.Best,out_SSE] = ratCompDensity(X,MCMCPar,Measurement,Extra);
 
     % Append X with information about posterior density (or transformation thereof) -- also store model simulations of X
     X = [X p log_p]; Xfx = fx; 
@@ -159,17 +159,17 @@ while (Iter < MCMCPar.ndraw),
         R = randsample(MCMCPar.m, 2 * MCMCPar.DEpairs * MCMCPar.seq); Zoff = Z(R,1:MCMCPar.n);
         
         % Determine to do parallel direction or snooker update
-        if (rand <= MCMCPar.parallelUpdate),
+        if (rand <= MCMCPar.parallelUpdate)
             Update = 'Parallel_Direction_Update';
         else
             Update = 'Snooker_Update';
-        end;
+        end
 
         % Generate candidate points (proposal) in each chain using either snooker or parallel direction update
         [xnew,CR(:,gen_number),alfa_s] = offde(xold,Zoff,CR(:,gen_number),MCMCPar,Update,Table_JumpRate,ParRange);
 
         % Compute the likelihood of each proposal in each chain
-        [p_xnew,log_p_xnew,fx_new,MCMCPar.Best,out_SSE] = CompDensity(xnew,MCMCPar,Measurement,ModelName,Extra);
+        [p_xnew,log_p_xnew,MCMCPar.Best,out_SSE] = ratCompDensity(xnew,MCMCPar,Measurement,Extra);
 
         % Calculate the Metropolis ratio
         [accept] = metrop(MCMCPar,xnew,log_p_xnew,xold,log_p_xold,alfa_s);
@@ -177,20 +177,20 @@ while (Iter < MCMCPar.ndraw),
         % And update X and the model simulation
         idx_X = find(accept == 1); 
         X(idx_X,1:MCMCPar.n+2) = [xnew(idx_X,1:MCMCPar.n) p_xnew(idx_X) log_p_xnew(idx_X)]; 
-        Xfx(:,idx_X) = fx_new(:,idx_X);
+        % Xfx(:,idx_X) = fx_new(:,idx_X);
 
         % Check whether to add the current points to the chains or not?
         if (T == MCMCPar.T);
             % Store the current sample in Sequences
             iloc = iloc + 1; Sequences(iloc,1:MCMCPar.n+2,1:MCMCPar.seq) = reshape(X',1,MCMCPar.n+2,MCMCPar.seq); 
             % Check whether to store the simulation results of the function evaluations
-            if Measurement.N > 0,
-                if strcmp(MCMCPar.modout,'Yes'),
-                    fx(:,m_func + 1 : m_func + MCMCPar.seq) = Xfx(:,1:MCMCPar.seq);
-                    % Update m_func
-                    m_func = m_func + MCMCPar.seq;
-                end;
-            end;
+%             if Measurement.N > 0,
+%                 if strcmp(MCMCPar.modout,'Yes'),
+%                     fx(:,m_func + 1 : m_func + MCMCPar.seq) = Xfx(:,1:MCMCPar.seq);
+%                     % Update m_func
+%                     m_func = m_func + MCMCPar.seq;
+%                 end;
+%             end;
             % And set the T to 0
             T = 0;
         end

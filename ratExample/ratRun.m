@@ -30,7 +30,7 @@ MCMCPar.m0 = inline('10 * MCMCPar.n');  % Initial size of matrix Z
 MCMCPar.pJumpRate_one = 0.20;           % Probability of selecting a jumprate of 1 --> jump between modes
 MCMCPar.pCR = 'Yes';                    % Adaptive tuning of crossover values (Yes or No)
 MCMCPar.Restart = 'No';                 % Restart run (Yes or No)
-MCMCPar.modout = 'Yes';                 % Return model (function) simulations of samples Yes or No)?
+MCMCPar.modout = 'No';                 % Return model (function) simulations of samples Yes or No)?
 MCMCPar.save = 'Yes';                    % Save output during the run (Yes or No)
 MCMCPar.ABC = 'No';                     % Approximate Bayesian Computation or Not?
 
