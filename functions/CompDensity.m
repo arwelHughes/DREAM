@@ -15,7 +15,7 @@ for ii = 1:MCMCPar.seq,
 
     % Call model to generate simulated data (Simulation results for the
     % Likihood function calculations
-    evalstr = ['[fx(:,ii),SSE] = ',ModelName,'(x(ii,:),Extra);']; 
+    evalstr = ['[~,SSE] = ',ModelName,'(x(ii,:),Extra);']; 
     eval(evalstr);
 
     % If we have measured data --> calculate the residual (used by most likelihood functions)

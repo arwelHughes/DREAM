@@ -1,8 +1,8 @@
 %% Test of DREAM with RAT
-clear
+%clear
 
 % Make the problem
-problem = r1ToProjectClass('defaultProject.mat');
+%problem = r1ToProjectClass('defaultProject.mat');
 controls = controlsDef();
 
 % Split it up into the constituents....
@@ -55,7 +55,13 @@ ModelName = 'ratFunc';
 ParRange.minn = fitConstr(:,1)';        % Note transpose - need to be row vectors..
 ParRange.maxn = fitConstr(:,2)';
 
-Measurement.MeasData = problemDef_cells{2}{:}(:,2);   % Contained in peoblemDef....
+allData = problemDef_cells{2};
+allY = [];
+for i = 1:length(allData)
+    thisData = allData{i};
+    allY = [allY ; thisData(:,2)];
+end
+Measurement.MeasData = allY; %problemDef_cells{2}{:}(:,2);   % Contained in peoblemDef....
 Measurement.N = length(Measurement.MeasData);
 
 % Run DREAM
