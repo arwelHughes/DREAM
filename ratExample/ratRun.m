@@ -67,7 +67,7 @@ Measurement.MeasData = allY; %problemDef_cells{2}{:}(:,2);   % Contained in peob
 Measurement.N = length(Measurement.MeasData);
 
 % Run DREAM
-[Sequences,X,Z,output,fx] = RAT_dream_zs(MCMCPar,ModelName,Extra,ParRange,Measurement);
+[Sequences,X,Z,output,fx] = RAT_dream_zs_compile(MCMCPar,ModelName,Extra,ParRange,Measurement);
 
 [chain,~,~] = getChain(Sequences,MCMCPar);
 
