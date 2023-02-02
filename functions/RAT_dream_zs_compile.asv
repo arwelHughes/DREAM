@@ -1,10 +1,10 @@
-function [Sequences,X,Z,output,fx] = RAT_dream_zs_compile(MCMCPar,ModelName,Extra,ParRange,Measurement)
+function [Sequences,X,Z,output,fx] = RAT_dream_zs_compile(MCMCPar,Extra,ParRange,Measurement)
 
 % Calculate MCMCPar.steps
-MCMCPar.steps = floor(MCMCPar.steps(MCMCPar)); 
+MCMCPar.steps = floor(MCMCPar.ndraw/(20 * MCMCPar.seq)); %floor(MCMCPar.steps(MCMCPar)); 
 
 % Calculate MCMCPar.m0
-MCMCPar.m0 = MCMCPar.m0(MCMCPar);   
+MCMCPar.m0 = 10 * MCMCPar.n; %MCMCPar.m0(MCMCPar);   
 
 
 % Removed for compile #1 ----------------
@@ -29,20 +29,20 @@ MCMCPar.m0 = MCMCPar.m0(MCMCPar);
 % ---------------
 
 % Check how many input variables
-if nargin < 5,
-    % Define Measurement
-    Measurement.MeasData = []; 
-end;
-
-if nargin < 4,
-    % Specify very large initial parameter ranges (minimum and maximum values)
-    ParRange.minn = [-Inf * ones(1,MCMCPar.n)]; ParRange.maxn = [Inf * ones(1,MCMCPar.n)];
-end;
-
-if nargin < 3,
-    % Define structure Extra to be empty
-    Extra = [];
-end;
+% if nargin < 5,
+%     % Define Measurement
+%     Measurement.MeasData = []; 
+% end;
+% 
+% if nargin < 4,
+%     % Specify very large initial parameter ranges (minimum and maximum values)
+%     ParRange.minn = [-Inf * ones(1,MCMCPar.n)]; ParRange.maxn = [Inf * ones(1,MCMCPar.n)];
+% end;
+% 
+% if nargin < 3,
+%     % Define structure Extra to be empty
+%     Extra = [];
+% end;
     
 % Calculate the number of calibration data measurements
 Measurement.N = size(Measurement.MeasData,1);
@@ -57,13 +57,26 @@ Measurement.N = size(Measurement.MeasData,1);
 % if strcmp(MCMCPar.Restart,'No'),
 
     % Set random number generator
-    opts.Seed = 'sum(100*clock)  % evaluated if it is a string';
-    % Then generate new seed
-    if ischar(opts.Seed)
-        randn('state', eval(opts.Seed));     % random number generator state
-    else
-        randn('state', opts.Seed);
-    end
+%     opts.Seed = 'sum(100*clock)  % evaluated if it is a string';
+%     % Then generate new seed
+%     if ischar(opts.Seed)
+%         randn('state', eval(opts.Seed));     % random number generator state
+%     else
+%         randn('state', opts.Seed);
+%     end
+    rng('default');
+
+    coder.varsize('X',[Inf Inf],[1 1]);
+    X = [0 0];
+
+    coder.varsize('delta_tot',[1 Inf],[0 1]);
+    delta_tot = zeros(1,MCMCPar.nCR);
+
+    coder.varsize('Xfx',[Inf Inf],[1 1]);
+    Xfx = [0 0];
+
+    coder.varsize('pCR',[Inf Inf],[1 1]);
+    coder.varsize('lCR',[Inf Inf],[1 1]);
 
     % Step 0: Initialize variables
     [MCMCPar,pCR,lCR,CR,Iter,iteration,T,fx,m_func,Sequences,Z,Table_JumpRate,iloc,output] = InitMCMC(MCMCPar,Measurement);
@@ -96,11 +109,13 @@ Measurement.N = size(Measurement.MeasData,1);
     Z(1:MCMCPar.m0,1:MCMCPar.n) = Zinit(1:MCMCPar.m0,1:MCMCPar.n);
 
     % Define initial population from last MCMCPar.seq samples of Zinit
-    X = Zinit(MCMCPar.m0 + 1:MCMCPar.m0+MCMCPar.seq,1:MCMCPar.n); clear Zinit;
+    X = Zinit(MCMCPar.m0 + 1:MCMCPar.m0+MCMCPar.seq,1:MCMCPar.n); 
+    
+    Zinit = zeros(size(Zinit));
 
     % Calculate posterior density associated with each value of X
     tic
-    [p,log_p,fx(:,1:MCMCPar.seq),MCMCPar.Best,out_SSE] = CompDensity(X,MCMCPar,Measurement,ModelName,Extra);
+    [p,log_p,MCMCPar.Best,out_SSE] = ratCompDensity(X,MCMCPar,Measurement,Extra);
 
     % Append X with information about posterior density (or transformation thereof) -- also store model simulations of X
     X = [X p log_p]; Xfx = fx; 
@@ -123,9 +138,8 @@ Measurement.N = size(Measurement.MeasData,1);
 %end;
 ETime=toc/3600;                           %Running time
 RTime=(MCMCPar.ndraw*ETime/Iter)-ETime;   %Remaining time
-disp(['Iter:' num2str(Iter) '  SSE=' num2str(MCMCPar.Best) ...
-      '     Time=' num2str(ETime*60) 'min' ...
-      '     Elapsed Time=' num2str(ETime) 'hr' '    Remaining Time=' num2str(RTime) 'hr']);
+
+fprintf('Iter: %g   SSE= %g   Time= %g min   Elapsed Time= %g hr    Remaining Time= %g hr \n', Iter, MCMCPar.Best, ETime*60, ETime, RTime) ;
 tic;
 
 % Move prior population to posterior population ...
@@ -136,11 +150,11 @@ while (Iter < MCMCPar.ndraw),
         % Change MCMCPar.steps in last iteration 
         MCMCPar.steps = ceil((MCMCPar.ndraw - Iter)/MCMCPar.seq);
         % Warning -- not enough chains to do sampling -- increase number of chains!
-        evalstr = char(strcat('DREAM_{(ZS)} WARNING: Changed MCMCPar.steps =',{' '},num2str(MCMCPar.steps),{' '},'at',{' '},...
-            num2str(Iter),{' '},'function evaluations \n'));
+        fprintf('DREAM_{(ZS)} WARNING: Changed MCMCPar.steps = %g at %g function evaluations \n',MCMCPar.steps, Iter);
         % Now print warning to screen and to file
-        fid = fopen('warning_file.txt','w');
-        fprintf(evalstr); fprintf(fid,evalstr);    
+%         fid = fopen('warning_file.txt','w');
+%         fprintf(evalstr); 
+%         fprintf(fid,evalstr);    
     end;
     
     % Initialize totaccept;
@@ -159,17 +173,17 @@ while (Iter < MCMCPar.ndraw),
         R = randsample(MCMCPar.m, 2 * MCMCPar.DEpairs * MCMCPar.seq); Zoff = Z(R,1:MCMCPar.n);
         
         % Determine to do parallel direction or snooker update
-        if (rand <= MCMCPar.parallelUpdate),
+        if (rand <= MCMCPar.parallelUpdate)
             Update = 'Parallel_Direction_Update';
         else
             Update = 'Snooker_Update';
-        end;
+        end
 
         % Generate candidate points (proposal) in each chain using either snooker or parallel direction update
         [xnew,CR(:,gen_number),alfa_s] = offde(xold,Zoff,CR(:,gen_number),MCMCPar,Update,Table_JumpRate,ParRange);
 
         % Compute the likelihood of each proposal in each chain
-        [p_xnew,log_p_xnew,fx_new,MCMCPar.Best,out_SSE] = CompDensity(xnew,MCMCPar,Measurement,ModelName,Extra);
+        [p_xnew,log_p_xnew,MCMCPar.Best,out_SSE] = ratCompDensity(xnew,MCMCPar,Measurement,Extra);
 
         % Calculate the Metropolis ratio
         [accept] = metrop(MCMCPar,xnew,log_p_xnew,xold,log_p_xold,alfa_s);
@@ -177,20 +191,20 @@ while (Iter < MCMCPar.ndraw),
         % And update X and the model simulation
         idx_X = find(accept == 1); 
         X(idx_X,1:MCMCPar.n+2) = [xnew(idx_X,1:MCMCPar.n) p_xnew(idx_X) log_p_xnew(idx_X)]; 
-        Xfx(:,idx_X) = fx_new(:,idx_X);
+        % Xfx(:,idx_X) = fx_new(:,idx_X);
 
         % Check whether to add the current points to the chains or not?
         if (T == MCMCPar.T);
             % Store the current sample in Sequences
             iloc = iloc + 1; Sequences(iloc,1:MCMCPar.n+2,1:MCMCPar.seq) = reshape(X',1,MCMCPar.n+2,MCMCPar.seq); 
             % Check whether to store the simulation results of the function evaluations
-            if Measurement.N > 0,
-                if strcmp(MCMCPar.modout,'Yes'),
-                    fx(:,m_func + 1 : m_func + MCMCPar.seq) = Xfx(:,1:MCMCPar.seq);
-                    % Update m_func
-                    m_func = m_func + MCMCPar.seq;
-                end;
-            end;
+%             if Measurement.N > 0,
+%                 if strcmp(MCMCPar.modout,'Yes'),
+%                     fx(:,m_func + 1 : m_func + MCMCPar.seq) = Xfx(:,1:MCMCPar.seq);
+%                     % Update m_func
+%                     m_func = m_func + MCMCPar.seq;
+%                 end;
+%             end;
             % And set the T to 0
             T = 0;
         end
@@ -222,7 +236,7 @@ while (Iter < MCMCPar.ndraw),
         % Update the waitbar
 %        waitbar(Iter/MCMCPar.ndraw,h);
         
-    end;
+    end
 
     % Reduce MCMCPar.steps to get rounded iteration numbers
     if (iteration == 2), MCMCPar.steps = MCMCPar.steps + 1; end;
@@ -234,8 +248,8 @@ while (Iter < MCMCPar.ndraw),
     output.CR(iteration,1:MCMCPar.nCR+1) = [Iter pCR];
 
     % Check whether to update individual pCR values
-    if (Iter <= 0.1 * MCMCPar.ndraw);
-        if strcmp(MCMCPar.pCR,'Yes');
+    if (Iter <= 0.1 * MCMCPar.ndraw)
+        if strcmp(MCMCPar.pCR,'Yes')
             % Update pCR values
             [pCR] = AdaptpCR(MCMCPar,delta_tot,lCR);
         end;
@@ -254,10 +268,8 @@ while (Iter < MCMCPar.ndraw),
     iteration = iteration + 1;
     Time=toc/3600;                            %Loop time
     ETime=ETime+Time;                         %Elapsed time
-    RTime=(MCMCPar.ndraw*ETime/Iter)-ETime;   %Remaining time
-    disp(['Iter:' num2str(Iter) '  SSE=' num2str(MCMCPar.Best) ...
-        '     Time=' num2str(Time*60) 'min' ...
-        '     Elapsed Time=' num2str(ETime) 'hr' '    Remaining Time=' num2str(RTime) 'hr']);
+    RTime=(MCMCPar.ndraw*ETime/Iter)-ETime;   %Remaining time    
+    fprintf('Iter: %g   SSE = %g    Time = %g min   Elapsed Time= %g hr   Remaining Time = %g hr \n', Iter, MCMCPar.Best, Time*60, ETime, RTime);
     tic;
     
     % Check whether to save the ouput?

@@ -12,6 +12,9 @@ function [R_stat] = Gelman(Sequences,MCMCPar)
 % Compute the dimensions of Sequences
 [n,nrY,m] = size(Sequences);
 
+coder.varsize('varSeq',[Inf Inf],[1 1]);
+varSeq = ones(MCMCPar.seq,MCMCPar.n);
+
 if (n < 10),
     % Set the R-statistic to a large value
     R_stat = -2 * ones(1,MCMCPar.n);

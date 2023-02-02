@@ -1,14 +1,18 @@
-function [CR,L] = GenCR(MCMCPar,pCR);
+function [outCR,L] = GenCR(MCMCPar,pCR)
 % Generates CR values based on current probabilities
 
 % How many candidate points for each crossover value?
-[L] = multrnd(MCMCPar.seq * MCMCPar.steps,pCR); L2 = [0 cumsum(L)];
+L = multrnd_compile(MCMCPar.seq * MCMCPar.steps,pCR); 
+L2 = [0 cumsum(L)];
 
 % Then select which candidate points are selected with what CR
 r = randperm(MCMCPar.seq * MCMCPar.steps);
 
+CR = zeros(MCMCPar.seq * MCMCPar.steps,1);
+coder.varsize('CR',[Inf 1],[1 0]);
+
 % Then generate CR values for each chain
-for zz = 1:MCMCPar.nCR,
+for zz = 1:MCMCPar.nCR
     
     % Define start and end 
     i_start = L2(1,zz) + 1; i_end = L2(1,zz+1);
@@ -19,7 +23,7 @@ for zz = 1:MCMCPar.nCR,
     % Assign these indices MCMCPar.CR(zz)
     CR(idx,1) = zz/MCMCPar.nCR;
     
-end;
+end
 
 % Now reshape CR
-CR = reshape(CR,MCMCPar.seq,MCMCPar.steps);
+outCR = reshape(CR,MCMCPar.seq,MCMCPar.steps);

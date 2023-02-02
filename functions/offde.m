@@ -13,6 +13,15 @@ noise_x = MCMCPar.eps * (2 * rand(MCMCPar.seq,MCMCPar.n) - 1);
 % Initialize the delta update to zero
 delta_x = zeros(MCMCPar.seq,MCMCPar.n);
 
+% Initialize JumpRate, rr and z
+JumpRate = 1;
+
+coder.varsize('rr',[Inf Inf],[1 1]);
+rr = zeros(MCMCPar.seq,4);
+
+coder.varsize('z',[Inf Inf],[1 1]);
+z = zeros(MCMCPar.seq,MCMCPar.n);
+
 if strcmp(Update,'Parallel_Direction_Update'), % PARALLEL DIRECTION UPDATE
 
     % Define which points of Zoff to use to generate jumps

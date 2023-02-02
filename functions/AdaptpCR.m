@@ -5,4 +5,4 @@ function [pCR] = AdaptpCR(MCMCPar,delta_tot,lCR);
 pCR = MCMCPar.seq * (delta_tot./lCR) / sum(delta_tot);
 
 % Normalize pCR
-pCR = pCR./sum(pCR);
+pCR = pCR./sum(pCR,2);

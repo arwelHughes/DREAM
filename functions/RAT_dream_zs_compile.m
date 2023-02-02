@@ -1,10 +1,10 @@
-function [Sequences,X,Z,output,fx] = RAT_dream_zs_compile(MCMCPar,ModelName,Extra,ParRange,Measurement)
+function [Sequences,X,Z,output,fx] = RAT_dream_zs_compile(MCMCPar,Extra,ParRange,Measurement)
 
 % Calculate MCMCPar.steps
-MCMCPar.steps = floor(MCMCPar.steps(MCMCPar)); 
+MCMCPar.steps = floor(MCMCPar.ndraw/(20 * MCMCPar.seq)); %floor(MCMCPar.steps(MCMCPar)); 
 
 % Calculate MCMCPar.m0
-MCMCPar.m0 = MCMCPar.m0(MCMCPar);   
+MCMCPar.m0 = 10 * MCMCPar.n; %MCMCPar.m0(MCMCPar);   
 
 
 % Removed for compile #1 ----------------
@@ -29,20 +29,20 @@ MCMCPar.m0 = MCMCPar.m0(MCMCPar);
 % ---------------
 
 % Check how many input variables
-if nargin < 5,
-    % Define Measurement
-    Measurement.MeasData = []; 
-end;
-
-if nargin < 4,
-    % Specify very large initial parameter ranges (minimum and maximum values)
-    ParRange.minn = [-Inf * ones(1,MCMCPar.n)]; ParRange.maxn = [Inf * ones(1,MCMCPar.n)];
-end;
-
-if nargin < 3,
-    % Define structure Extra to be empty
-    Extra = [];
-end;
+% if nargin < 5,
+%     % Define Measurement
+%     Measurement.MeasData = []; 
+% end;
+% 
+% if nargin < 4,
+%     % Specify very large initial parameter ranges (minimum and maximum values)
+%     ParRange.minn = [-Inf * ones(1,MCMCPar.n)]; ParRange.maxn = [Inf * ones(1,MCMCPar.n)];
+% end;
+% 
+% if nargin < 3,
+%     % Define structure Extra to be empty
+%     Extra = [];
+% end;
     
 % Calculate the number of calibration data measurements
 Measurement.N = size(Measurement.MeasData,1);
@@ -57,13 +57,26 @@ Measurement.N = size(Measurement.MeasData,1);
 % if strcmp(MCMCPar.Restart,'No'),
 
     % Set random number generator
-    opts.Seed = 'sum(100*clock)  % evaluated if it is a string';
-    % Then generate new seed
-    if ischar(opts.Seed)
-        randn('state', eval(opts.Seed));     % random number generator state
-    else
-        randn('state', opts.Seed);
-    end
+%     opts.Seed = 'sum(100*clock)  % evaluated if it is a string';
+%     % Then generate new seed
+%     if ischar(opts.Seed)
+%         randn('state', eval(opts.Seed));     % random number generator state
+%     else
+%         randn('state', opts.Seed);
+%     end
+    rng('default');
+
+    coder.varsize('X',[Inf Inf],[1 1]);
+    X = [0 0];
+
+    coder.varsize('delta_tot',[1 Inf],[0 1]);
+    delta_tot = zeros(1,MCMCPar.nCR);
+
+    coder.varsize('Xfx',[Inf Inf],[1 1]);
+    Xfx = [0 0];
+
+    coder.varsize('pCR',[Inf Inf],[1 1]);
+    coder.varsize('lCR',[Inf Inf],[1 1]);
 
     % Step 0: Initialize variables
     [MCMCPar,pCR,lCR,CR,Iter,iteration,T,fx,m_func,Sequences,Z,Table_JumpRate,iloc,output] = InitMCMC(MCMCPar,Measurement);
@@ -96,7 +109,9 @@ Measurement.N = size(Measurement.MeasData,1);
     Z(1:MCMCPar.m0,1:MCMCPar.n) = Zinit(1:MCMCPar.m0,1:MCMCPar.n);
 
     % Define initial population from last MCMCPar.seq samples of Zinit
-    X = Zinit(MCMCPar.m0 + 1:MCMCPar.m0+MCMCPar.seq,1:MCMCPar.n); clear Zinit;
+    X = Zinit(MCMCPar.m0 + 1:MCMCPar.m0+MCMCPar.seq,1:MCMCPar.n); 
+    
+    Zinit = zeros(size(Zinit));
 
     % Calculate posterior density associated with each value of X
     tic
@@ -123,9 +138,8 @@ Measurement.N = size(Measurement.MeasData,1);
 %end;
 ETime=toc/3600;                           %Running time
 RTime=(MCMCPar.ndraw*ETime/Iter)-ETime;   %Remaining time
-disp(['Iter:' num2str(Iter) '  SSE=' num2str(MCMCPar.Best) ...
-      '     Time=' num2str(ETime*60) 'min' ...
-      '     Elapsed Time=' num2str(ETime) 'hr' '    Remaining Time=' num2str(RTime) 'hr']);
+
+fprintf('Iter: %g   SSE= %g   Time= %g min   Elapsed Time= %g hr    Remaining Time= %g hr \n', Iter, MCMCPar.Best, ETime*60, ETime, RTime) ;
 tic;
 
 % Move prior population to posterior population ...
@@ -136,11 +150,11 @@ while (Iter < MCMCPar.ndraw),
         % Change MCMCPar.steps in last iteration 
         MCMCPar.steps = ceil((MCMCPar.ndraw - Iter)/MCMCPar.seq);
         % Warning -- not enough chains to do sampling -- increase number of chains!
-        evalstr = char(strcat('DREAM_{(ZS)} WARNING: Changed MCMCPar.steps =',{' '},num2str(MCMCPar.steps),{' '},'at',{' '},...
-            num2str(Iter),{' '},'function evaluations \n'));
+        fprintf('DREAM_{(ZS)} WARNING: Changed MCMCPar.steps = %g at %g function evaluations \n',MCMCPar.steps, Iter);
         % Now print warning to screen and to file
-        fid = fopen('warning_file.txt','w');
-        fprintf(evalstr); fprintf(fid,evalstr);    
+%         fid = fopen('warning_file.txt','w');
+%         fprintf(evalstr); 
+%         fprintf(fid,evalstr);    
     end;
     
     % Initialize totaccept;
@@ -222,7 +236,7 @@ while (Iter < MCMCPar.ndraw),
         % Update the waitbar
 %        waitbar(Iter/MCMCPar.ndraw,h);
         
-    end;
+    end
 
     % Reduce MCMCPar.steps to get rounded iteration numbers
     if (iteration == 2), MCMCPar.steps = MCMCPar.steps + 1; end;
@@ -234,8 +248,8 @@ while (Iter < MCMCPar.ndraw),
     output.CR(iteration,1:MCMCPar.nCR+1) = [Iter pCR];
 
     % Check whether to update individual pCR values
-    if (Iter <= 0.1 * MCMCPar.ndraw);
-        if strcmp(MCMCPar.pCR,'Yes');
+    if (Iter <= 0.1 * MCMCPar.ndraw)
+        if strcmp(MCMCPar.pCR,'Yes')
             % Update pCR values
             [pCR] = AdaptpCR(MCMCPar,delta_tot,lCR);
         end;
@@ -254,10 +268,8 @@ while (Iter < MCMCPar.ndraw),
     iteration = iteration + 1;
     Time=toc/3600;                            %Loop time
     ETime=ETime+Time;                         %Elapsed time
-    RTime=(MCMCPar.ndraw*ETime/Iter)-ETime;   %Remaining time
-    disp(['Iter:' num2str(Iter) '  SSE=' num2str(MCMCPar.Best) ...
-        '     Time=' num2str(Time*60) 'min' ...
-        '     Elapsed Time=' num2str(ETime) 'hr' '    Remaining Time=' num2str(RTime) 'hr']);
+    RTime=(MCMCPar.ndraw*ETime/Iter)-ETime;   %Remaining time    
+    fprintf('Iter: %g   SSE = %g    Time = %g min   Elapsed Time= %g hr   Remaining Time = %g hr \n', Iter, MCMCPar.Best, Time*60, ETime, RTime);
     tic;
     
     % Check whether to save the ouput?
@@ -296,16 +308,16 @@ fprintf(fid,'----------- End of DREAM_{(ZS)} warning file ----------\n');
 % Close the warning file
 fclose('all');
 % Open the warning file
-edit warning_file.txt
+% edit warning_file.txt
 
 % If five output arguments are requested then return fx
-if nargout == 5,
-    if strcmp(MCMCPar.modout,'Yes'),
-       % remove zeros and tranpose fx --> easier to use
-       fx = fx(:,1:m_func)';
-    else
+% if nargout == 5,
+%     if strcmp(MCMCPar.modout,'Yes'),
+%        % remove zeros and tranpose fx --> easier to use
+%        fx = fx(:,1:m_func)';
+%     else
        fx = [];
-    end; 
-end;
+%     end; 
+% end;
 
 % -------------------------------------------------------------------------
