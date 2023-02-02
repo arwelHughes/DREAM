@@ -2,8 +2,10 @@
 %clear
 
 % Make the problem
-%problem = r1ToProjectClass('defaultProject.mat');
+problem = r1ToProjectClass('original_dspc_bilayer.mat');
+problem.setParameter(12,'fit',false);
 controls = controlsDef();
+[problem,results] = RAT(problem,controls);
 
 % Split it up into the constituents....
 [problemDef,problemDef_cells,problemDef_limits,priors,controls] = RatParseClassToStructs_new(problem,controls);
@@ -67,9 +69,17 @@ Measurement.N = length(Measurement.MeasData);
 % Run DREAM
 [Sequences,X,Z,output,fx] = RAT_dream_zs(MCMCPar,ModelName,Extra,ParRange,Measurement);
 
+[chain,~,~] = getChain(Sequences,MCMCPar);
+
+[~,fitNames] = packparams(problemDef,problemDef_cells,problemDef_limits,controls.checks);
+
+h = figure(1); clf;
+%plotBayesCorrFig(chain,results.fitNames,h)
+
+plotmatrix(chain),
 
 % Post-process run....
-postprocDREAM;
+%postprocDREAM;
 
 
 
