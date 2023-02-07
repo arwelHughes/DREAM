@@ -2,10 +2,16 @@
 %clear
 
 % Make the problem
-problem = r1ToProjectClass('original_dspc_bilayer.mat');
-problem.setParameter(12,'fit',false);
+%problem = r1ToProjectClass('original_dspc_bilayer.mat');
+% problem.setParameter(12,'fit',false);
+
+problem = r1ToProjectClass('defaultProject.mat');
+
 controls = controlsDef();
 [problem,results] = RAT(problem,controls);
+
+% Store the unmodifed class input
+problemDefInput = problem;
 
 % Split it up into the constituents....
 [problemDef,problemDef_cells,problemDef_limits,priors,controls] = RatParseClassToStructs_new(problem,controls);
@@ -19,11 +25,11 @@ fitConstr = problemDef.fitconstr;
 
 % Initialise the MCMC parameters....
 % Recommended parameter settings
-MCMCPar.seq = 3;                        % Number of Markov chains / sequences (for high dimensional and highly nonlinear problems, larger values work beter!!)
+MCMCPar.seq = 9;                        % Number of Markov chains / sequences (for high dimensional and highly nonlinear problems, larger values work beter!!)
 MCMCPar.DEpairs = 1;                    % Number of chain pairs to generate candidate points
-MCMCPar.nCR = 3;                        % Number of crossover values used
+MCMCPar.nCR = 5;                        % Number of crossover values used
 MCMCPar.k = 10;                         % Thinning parameter for appending X to Z
-MCMCPar.parallelUpdate = 0.9;           % Fraction of parallel direction updates
+MCMCPar.parallelUpdate = 0.7;           % Fraction of parallel direction updates
 MCMCPar.eps = 5e-2;                     % Perturbation for ergodicity
 MCMCPar.steps = 0; %inline('MCMCPar.ndraw/(20 * MCMCPar.seq)'); % Number of steps before calculating convergence diagnostics
 MCMCPar.m0 = 0; %inline('10 * MCMCPar.n');  % Initial size of matrix Z
@@ -37,7 +43,7 @@ MCMCPar.ABC = 'No';                     % Approximate Bayesian Computation or No
 
 % Problem specific parameter settings
 MCMCPar.n = length(fitPars);                    % Dimension of the problem (number of parameters to be estimated)
-MCMCPar.ndraw = 5e5;                            % Maximum number of function evaluations
+MCMCPar.ndraw = 1e5;                            % Maximum number of function evaluations
 MCMCPar.T = 1;                                  % Each Tth sample is collected in the chains
 MCMCPar.prior = 'LHS';                          % Latin Hypercube sampling (options, "LHS", "COV" and "PRIOR")
 MCMCPar.BoundHandling = 'Reflect';              % Boundary handling (options, "Reflect", "Bound", "Fold", and "None");
@@ -67,24 +73,56 @@ Measurement.MeasData = allY; %problemDef_cells{2}{:}(:,2);   % Contained in peob
 Measurement.N = length(Measurement.MeasData);
 
 % Run DREAM
-[Sequences,X,Z,output,fx] = RAT_dream_zs_compile_mex(MCMCPar,Extra,ParRange,Measurement);
+[Sequences,X,Z,out,fx] = RAT_dream_zs_compile(MCMCPar,Extra,ParRange,Measurement);
+%[Sequences,X,Z,out,fx] = RAT_dream_zs(MCMCPar,'test',Extra,ParRange,Measurement);
 
-[chain,~,~] = getChain(Sequences,MCMCPar);
+%%
+[chain,mean,~] = getChain(Sequences,MCMCPar);
 
-[~,fitNames] = packparams(problemDef,problemDef_cells,problemDef_limits,controls.checks);
+output.results = results;
+output.chain = chain;
+output.bestPars = mean;
+output.sschain = [];
+output.s2chain = [];
+output.results.mean = mean;
+
+%problemDef.fitPars = mean;
+
+[problemDef,fitNames] = packparams(problemDef,problemDef_cells,problemDef_limits,controls.checks);
+
+
+problem = {problemDef,controls,problemDef_limits,problemDef_cells};
+[problemDef,outProblem,result,bayesResults] = processBayes_newMethod(output,problem);
 
 h = figure(1); clf;
 %plotBayesCorrFig(chain,results.fitNames,h)
 
-plotmatrix(chain),
+result = parseResultToStruct(outProblem,result);
+
+if isfield(outProblem,'fitpars')
+    result.bestFitPars = outProblemStruct.fitpars;
+end
+
+% if any((strcmpi(controls.proc,{'bayes','NS'})))
+result = mergeStructs(result,bayesResults);
+% end
+
+[~,fitNames] = packparams(problemDef,problemDef_cells,problemDef_limits,controls.checks);
+result.fitNames = fitNames;
+
+outProblemDef = RATparseOutToProjectClass(problemDefInput,problemDef,problem,result);
+
+plotmatrix(chain);
 
 % Post-process run....
 %postprocDREAM;
+% dreamOut_dspc.problem = outProblemDef;
+% dreamOut_dspc.result = result;
+% save('dream_out_dspc.mat','dreamOut_dspc');
 
-
-
-
-
+dreamOut_d2o.problem = outProblemDef;
+dreamOut_d2o.result = result;
+save('dream_out_d2o.mat','dreamOut_d2o');
 
 
 

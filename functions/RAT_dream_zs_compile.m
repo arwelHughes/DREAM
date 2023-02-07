@@ -3,6 +3,8 @@ function [Sequences,X,Z,output,fx] = RAT_dream_zs_compile(MCMCPar,Extra,ParRange
 % Calculate MCMCPar.steps
 MCMCPar.steps = floor(MCMCPar.ndraw/(20 * MCMCPar.seq)); %floor(MCMCPar.steps(MCMCPar)); 
 
+%if MCMCPar.steps > MCMC
+
 % Calculate MCMCPar.m0
 MCMCPar.m0 = 10 * MCMCPar.n; %MCMCPar.m0(MCMCPar);   
 
@@ -101,9 +103,9 @@ Measurement.N = size(Measurement.MeasData,1);
 %     end;
 
     % Do boundary handling -- what to do when points fall outside bound
-    if strcmp(MCMCPar.BoundHandling,'None') == 0;
+    if strcmp(MCMCPar.BoundHandling,'None') == 0
         [Zinit] = BoundaryHandling(Zinit,ParRange,MCMCPar.BoundHandling);
-    end;
+    end
 
     % Define initial MCMCPar.m0 rows of Z to be initial sample -- posterior density is not needed and thus not evaluated!!
     Z(1:MCMCPar.m0,1:MCMCPar.n) = Zinit(1:MCMCPar.m0,1:MCMCPar.n);
@@ -143,10 +145,10 @@ fprintf('Iter: %g   SSE= %g   Time= %g min   Elapsed Time= %g hr    Remaining Ti
 tic;
 
 % Move prior population to posterior population ...
-while (Iter < MCMCPar.ndraw),
+while (Iter < MCMCPar.ndraw)
 
     % Check that exactly MCMCPar.ndraw are done (uneven numbers this is impossible, but as close as possible)
-    if (MCMCPar.steps * MCMCPar.seq) > MCMCPar.ndraw - Iter; 
+    if (MCMCPar.steps * MCMCPar.seq) > MCMCPar.ndraw - Iter
         % Change MCMCPar.steps in last iteration 
         MCMCPar.steps = ceil((MCMCPar.ndraw - Iter)/MCMCPar.seq);
         % Warning -- not enough chains to do sampling -- increase number of chains!
@@ -210,22 +212,22 @@ while (Iter < MCMCPar.ndraw),
         end
 
         % Compute squared jumping distance for each CR value
-        if strcmp(MCMCPar.pCR,'Yes');
+        if strcmp(MCMCPar.pCR,'Yes')
             % Calculate the standard deviation of each dimension of X
             r = repmat(std(X(1:MCMCPar.seq,1:MCMCPar.n)),MCMCPar.seq,1);
             % Compute the Euclidean distance between new X and old X
             delta_normX = sum(((xold(1:end,1:MCMCPar.n) - X(1:end,1:MCMCPar.n))./r).^2,2);
             % Use this information to update sum_p2 to update N_CR
             [delta_tot] = CalcDelta(MCMCPar,delta_tot,delta_normX,CR(1:MCMCPar.seq,gen_number));
-        end;
+        end
 
         % Check whether to append X to Z
-        if (mod(gen_number,MCMCPar.k) == 0),
+        if (mod(gen_number,MCMCPar.k) == 0)
             % Append X to Z
             Z(MCMCPar.m + 1 : MCMCPar.m + MCMCPar.seq,1:MCMCPar.n+2) = X(1:MCMCPar.seq,1:MCMCPar.n+2);
             % Update MCMCPar.m
             MCMCPar.m = MCMCPar.m + MCMCPar.seq;
-        end;
+        end
 
         % How many candidate points have been accepted -- for Acceptance Rate
         totaccept = totaccept + sum(accept);
@@ -239,7 +241,7 @@ while (Iter < MCMCPar.ndraw),
     end
 
     % Reduce MCMCPar.steps to get rounded iteration numbers
-    if (iteration == 2), MCMCPar.steps = MCMCPar.steps + 1; end;
+    if (iteration == 2), MCMCPar.steps = MCMCPar.steps + 1; end
 
     % Store Important Diagnostic information -- Acceptance Rate
     output.AR(iteration,1:2) = [Iter 100 * totaccept/(MCMCPar.steps * MCMCPar.seq)];
@@ -252,8 +254,8 @@ while (Iter < MCMCPar.ndraw),
         if strcmp(MCMCPar.pCR,'Yes')
             % Update pCR values
             [pCR] = AdaptpCR(MCMCPar,delta_tot,lCR);
-        end;
-    end;
+        end
+    end
 
     % Generate CR values based on current pCR values
     [CR,lCRnew] = GenCR(MCMCPar,pCR); lCR = lCR + lCRnew;
@@ -273,7 +275,7 @@ while (Iter < MCMCPar.ndraw),
     tic;
     
     % Check whether to save the ouput?
-    if strcmp(MCMCPar.save,'Yes');    
+    if strcmp(MCMCPar.save,'Yes')    
     
 %         % Initialize waitbar
 %         close(h); h = waitbar(Iter/MCMCPar.ndraw,'Saving iterations to DREAM_{(ZS)}.mat - Please wait...');
@@ -283,9 +285,9 @@ while (Iter < MCMCPar.ndraw),
 %     
 %         % Rename the waitbar
 %         close(h); h = waitbar(Iter/MCMCPar.ndraw,'Running DREAM_{(ZS)} - Please wait...');
-    end;
+    end
 
-end;
+end
 
 % ---------------------------- POST PROCESSING ----------------------------
 % Variables have been pre-allocated in memory --> might need remove zeros

@@ -1,10 +1,12 @@
 function [Sequences,X,Z,output,fx] = RAT_dream_zs(MCMCPar,ModelName,Extra,ParRange,Measurement)
 
 % Calculate MCMCPar.steps
-MCMCPar.steps = floor(MCMCPar.steps(MCMCPar)); 
+MCMCPar.steps = floor(MCMCPar.ndraw/(20 * MCMCPar.seq)); %floor(MCMCPar.steps(MCMCPar)); 
+
+%if MCMCPar.steps > MCMC
 
 % Calculate MCMCPar.m0
-MCMCPar.m0 = MCMCPar.m0(MCMCPar);   
+MCMCPar.m0 = 10 * MCMCPar.n; %MCMCPar.m0(MCMCPar);   
 
 % open an output file with warnings
 fid = fopen('warning_file.txt','w');
@@ -23,21 +25,21 @@ if MCMCPar.m0 < (2 * MCMCPar.DEpairs * MCMCPar.seq),
     return;
 end;
     
-% Check how many input variables
-if nargin < 5,
-    % Define Measurement
-    Measurement.MeasData = []; 
-end;
-
-if nargin < 4,
-    % Specify very large initial parameter ranges (minimum and maximum values)
-    ParRange.minn = [-Inf * ones(1,MCMCPar.n)]; ParRange.maxn = [Inf * ones(1,MCMCPar.n)];
-end;
-
-if nargin < 3,
-    % Define structure Extra to be empty
-    Extra = [];
-end;
+% % Check how many input variables
+% if nargin < 5,
+%     % Define Measurement
+%     Measurement.MeasData = []; 
+% end;
+% 
+% if nargin < 4,
+%     % Specify very large initial parameter ranges (minimum and maximum values)
+     %ParRange.minn = [-Inf * ones(1,MCMCPar.n)]; ParRange.maxn = [Inf * ones(1,MCMCPar.n)];
+% end;
+% 
+% if nargin < 3,
+%     % Define structure Extra to be empty
+%     Extra = [];
+% end;
     
 % Calculate the number of calibration data measurements
 Measurement.N = size(Measurement.MeasData,1);
@@ -90,7 +92,8 @@ if strcmp(MCMCPar.Restart,'No'),
 
     % Calculate posterior density associated with each value of X
     tic
-    [p,log_p,fx(:,1:MCMCPar.seq),MCMCPar.Best,out_SSE] = CompDensity(X,MCMCPar,Measurement,ModelName,Extra);
+    [p,log_p,MCMCPar.Best,out_SSE] = ratCompDensity(X,MCMCPar,Measurement,Extra);
+    % [p,log_p,fx(:,1:MCMCPar.seq),MCMCPar.Best,out_SSE] = CompDensity(X,MCMCPar,Measurement,ModelName,Extra);
 
     % Append X with information about posterior density (or transformation thereof) -- also store model simulations of X
     X = [X p log_p]; Xfx = fx; 
@@ -159,7 +162,8 @@ while (Iter < MCMCPar.ndraw),
         [xnew,CR(:,gen_number),alfa_s] = offde(xold,Zoff,CR(:,gen_number),MCMCPar,Update,Table_JumpRate,ParRange);
 
         % Compute the likelihood of each proposal in each chain
-        [p_xnew,log_p_xnew,fx_new,MCMCPar.Best,out_SSE] = CompDensity(xnew,MCMCPar,Measurement,ModelName,Extra);
+        [p_xnew,log_p_xnew,MCMCPar.Best,out_SSE] = ratCompDensity(X,MCMCPar,Measurement,Extra);
+        %[p_xnew,log_p_xnew,fx_new,MCMCPar.Best,out_SSE] = CompDensity(xnew,MCMCPar,Measurement,ModelName,Extra);
 
         % Calculate the Metropolis ratio
         [accept] = metrop(MCMCPar,xnew,log_p_xnew,xold,log_p_xold,alfa_s);
@@ -167,7 +171,7 @@ while (Iter < MCMCPar.ndraw),
         % And update X and the model simulation
         idx_X = find(accept == 1); 
         X(idx_X,1:MCMCPar.n+2) = [xnew(idx_X,1:MCMCPar.n) p_xnew(idx_X) log_p_xnew(idx_X)]; 
-        Xfx(:,idx_X) = fx_new(:,idx_X);
+        Xfx(:,idx_X) = [];%fx_new(:,idx_X);
 
         % Check whether to add the current points to the chains or not?
         if (T == MCMCPar.T);
