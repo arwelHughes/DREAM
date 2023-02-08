@@ -36,16 +36,22 @@ figure(4); clf; hold on
 pmChain = pmResult.chain;
 drChain = drResult.chain;
 
+
+% MCMCHammer
+hammerChain = load('mcmcHammer_chain.mat');
+hammerChain = hammerChain.mm;
+
+
 np = length(names);
 
-plotRows = ceil(np/4);
+plotRows = ceil(np/3);
 
 r = 1;
 c = 1;
 for i = 1:np
     thisPar = pmChain(:,i);
     %thisPar = thisPar./sum(thisPar);
-    subplot(plotRows,4,i);
+    subplot(plotRows,3,i);
 
     h = histogram(thisPar,30,'Normalization','probability');
     set(h,'FaceAlpha',0.3);
@@ -61,7 +67,11 @@ for i = 1:np
     h3 = histogram(thisPar3,30,'Normalization','probability');
     set(h3,'FaceAlpha',0.3);
 
-    legend({'pm','dream','dram'});
+    thisPar4 = hammerChain(:,i);
+    h4 = histogram(thisPar4,30,'Normalization','probability');
+    set(h4,'FaceAlpha',0.3);
+
+    legend({'pm','dream','dram','hammer'});
 end
 
 

@@ -20,6 +20,8 @@ problemDefInput = problem;
 [problemDef,fitNames] = packparams(problemDef,problemDef_cells,problemDef_limits,controls.checks);
 
 % Pull out our fitting parameters....
+problemDef = scalePars(problemDef);
+
 fitPars = problemDef.fitpars;
 fitConstr = problemDef.fitconstr;
 
@@ -30,7 +32,7 @@ MCMCPar.DEpairs = 1;                    % Number of chain pairs to generate cand
 MCMCPar.nCR = 5;                        % Number of crossover values used
 MCMCPar.k = 10;                         % Thinning parameter for appending X to Z
 MCMCPar.parallelUpdate = 0.7;           % Fraction of parallel direction updates
-MCMCPar.eps = 5e-8;                     % Perturbation for ergodicity
+MCMCPar.eps = 5e-2;                     % Perturbation for ergodicity
 MCMCPar.steps = 0; %inline('MCMCPar.ndraw/(20 * MCMCPar.seq)'); % Number of steps before calculating convergence diagnostics
 MCMCPar.m0 = 0; %inline('10 * MCMCPar.n');  % Initial size of matrix Z
 MCMCPar.pJumpRate_one = 0.20;           % Probability of selecting a jumprate of 1 --> jump between modes
@@ -47,7 +49,7 @@ MCMCPar.ndraw = 1e5;                            % Maximum number of function eva
 MCMCPar.T = 1;                                  % Each Tth sample is collected in the chains
 MCMCPar.prior = 'LHS';                          % Latin Hypercube sampling (options, "LHS", "COV" and "PRIOR")
 MCMCPar.BoundHandling = 'Reflect';              % Boundary handling (options, "Reflect", "Bound", "Fold", and "None");
-MCMCPar.modout = 'Yes';                         % Return model (function) simulations of samples Yes or No)?
+MCMCPar.modout = 'No';                         % Return model (function) simulations of samples Yes or No)?
 MCMCPar.lik = 3;                                % Define likelihood function -- Sum of Squared Error ** will overload this ***
 MCMCPar.Best = Inf;                             % Need to start with an initial 'Best' or model crashes
 
@@ -60,8 +62,8 @@ Extra.controls = controls;
 ModelName = 'ratFunc';
 
 % Give the parameter ranges (minimum and maximum values)
-ParRange.minn = fitConstr(:,1)';        % Note transpose - need to be row vectors..
-ParRange.maxn = fitConstr(:,2)';
+ParRange.minn = zeros(1,length(fitPars)); %fitConstr(:,1)';        % Note transpose - need to be row vectors..
+ParRange.maxn = ones(1,length(fitPars)); %fitConstr(:,2)';
 
 allData = problemDef_cells{2};
 allY = [];
@@ -78,6 +80,15 @@ Measurement.N = length(Measurement.MeasData);
 
 %%
 [chain,mean,~] = getChain(Sequences,MCMCPar);
+
+
+% Unscale the chain...
+limits = problemDef.fitconstr;
+for i = 1:size(chain,2)
+    unscaledX(:,i) = (chain(:,i).*(limits(i,2)-limits(i,1)))+limits(i,1);
+end
+
+
 
 output.results = results;
 output.chain = chain;
@@ -120,9 +131,9 @@ plotmatrix(chain);
 % dreamOut_dspc.result = result;
 % save('dream_out_dspc.mat','dreamOut_dspc');
 
-dreamOut_d2o.problem = outProblemDef;
-dreamOut_d2o.result = result;
-save('dream_out_d2o.mat','dreamOut_d2o');
+% dreamOut_d2o.problem = outProblemDef;
+% dreamOut_d2o.result = result;
+% save('dream_out_d2o.mat','dreamOut_d2o');
 
 
 

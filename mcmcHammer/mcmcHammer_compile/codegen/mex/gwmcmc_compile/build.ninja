@@ -1,0 +1,105 @@
+# CompilerName=clang
+# Mode=optim
+ninja_required_version = 1.3
+
+# Basic folders
+root = .
+builddir = $root/build/maci64
+matlabdir = /Applications/MATLAB_R2022b.app
+startdir = /Users/arwel.hughes/Documents/coding/DREAM/mcmcHammer/mcmcHammer_compile
+
+# Toolchain information
+cc = /usr/bin/xcrun -sdk macosx13.1 clang
+cxx = /usr/bin/xcrun -sdk macosx13.1 clang++
+linker = /usr/bin/xcrun -sdk macosx13.1 clang
+linkerxx = /usr/bin/xcrun -sdk macosx13.1 clang++
+
+cflags =  -fno-common -arch x86_64 -mmacosx-version-min=10.15 -fexceptions -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -DMATLAB_MEX_FILE  -O2 -fwrapv -DNDEBUG -fvisibility=hidden -std=c99 -I "$root" -I "$startdir" -I "$root/interface" -I "$matlabdir/extern/include" -I "." -DMODEL=gwmcmc_compile_mex -DMW_NEEDS_VERSION_H -c -fPIC -Xpreprocessor -fopenmp -I "$matlabdir/toolbox/eml/externalDependency/omp/maci64/include" -DOpenMP_omp_LIBRARY="$matlabdir/sys/os/maci64/libiomp5.dylib" 
+
+cxxflags =  -fno-common -arch x86_64 -mmacosx-version-min=10.15 -fexceptions -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -fobjc-arc -std=c++11 -stdlib=libc++ -DMATLAB_MEX_FILE  -O2 -fwrapv -DNDEBUG -fvisibility=hidden -std=c++11 -I "$root" -I "$startdir" -I "$root/interface" -I "$matlabdir/extern/include" -I "." -DMODEL=gwmcmc_compile_mex -DMW_NEEDS_VERSION_H -c -fPIC -Xpreprocessor -fopenmp -I "$matlabdir/toolbox/eml/externalDependency/omp/maci64/include" -DOpenMP_omp_LIBRARY="$matlabdir/sys/os/maci64/libiomp5.dylib" 
+
+ldflags =  -Wl,-twolevel_namespace -undefined error -arch x86_64 -mmacosx-version-min=10.15 -Wl,-syslibroot,/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -framework Cocoa -bundle  -stdlib=libc++ -L"$matlabdir/bin/maci64" -lmx -lmex -lmat -L"$matlabdir/extern/bin/maci64" -lMatlabDataArray -lMatlabEngine  -Wl,-rpath,@loader_path -o gwmcmc_compile_mex.mexmaci64 -lemlrt -lcovrt -lut -lmwmathutil -fPIC -L"$matlabdir/sys/os/maci64" -liomp5
+
+linkobjs = 
+
+# Build Rules
+rule cc
+    command = $cc $cflags $in -o $out
+
+rule cxx
+    command = $cxx $cxxflags $in -o $out
+
+rule link
+    command = $linker $in $linkobjs $ldflags
+
+rule linkxx
+    command = $linkerxx $in $linkobjs $ldflags
+
+# Build
+build $builddir/gwmcmc_compile_data.o : cxx $root/gwmcmc_compile_data.cpp
+build $builddir/rt_nonfinite.o : cxx $root/rt_nonfinite.cpp
+build $builddir/gwmcmc_compile_initialize.o : cxx $root/gwmcmc_compile_initialize.cpp
+build $builddir/gwmcmc_compile_terminate.o : cxx $root/gwmcmc_compile_terminate.cpp
+build $builddir/gwmcmc_compile.o : cxx $root/gwmcmc_compile.cpp
+build $builddir/randn.o : cxx $root/randn.cpp
+build $builddir/bsxfun.o : cxx $root/bsxfun.cpp
+build $builddir/reflectivity_calculation_wrapper.o : cxx $root/reflectivity_calculation_wrapper.cpp
+build $builddir/standardTF_reflectivityCalculation.o : cxx $root/standardTF_reflectivityCalculation.cpp
+build $builddir/standardTF_stanLay_reflectivityCalculation.o : cxx $root/standardTF_stanLay_reflectivityCalculation.cpp
+build $builddir/backSort.o : cxx $root/backSort.cpp
+build $builddir/allocateLayersForContrast.o : cxx $root/allocateLayersForContrast.cpp
+build $builddir/standardTF_layers_core.o : cxx $root/standardTF_layers_core.cpp
+build $builddir/groupLayers_Mod.o : cxx $root/groupLayers_Mod.cpp
+build $builddir/indexShapeCheck.o : cxx $root/indexShapeCheck.cpp
+build $builddir/makeSLDProfiles.o : cxx $root/makeSLDProfiles.cpp
+build $builddir/sum.o : cxx $root/sum.cpp
+build $builddir/asymconvstep.o : cxx $root/asymconvstep.cpp
+build $builddir/applyScalarFunction.o : cxx $root/applyScalarFunction.cpp
+build $builddir/resampleLayers.o : cxx $root/resampleLayers.cpp
+build $builddir/adaptive_new.o : cxx $root/adaptive_new.cpp
+build $builddir/linspace.o : cxx $root/linspace.cpp
+build $builddir/find.o : cxx $root/find.cpp
+build $builddir/repmat.o : cxx $root/repmat.cpp
+build $builddir/any1.o : cxx $root/any1.cpp
+build $builddir/sortLE.o : cxx $root/sortLE.cpp
+build $builddir/shiftdata.o : cxx $root/shiftdata.cpp
+build $builddir/callReflectivity.o : cxx $root/callReflectivity.cpp
+build $builddir/colon.o : cxx $root/colon.cpp
+build $builddir/data_resolution_polly.o : cxx $root/data_resolution_polly.cpp
+build $builddir/resolution_polly.o : cxx $root/resolution_polly.cpp
+build $builddir/chiSquared.o : cxx $root/chiSquared.cpp
+build $builddir/standardTF_stanlay_paraPoints.o : cxx $root/standardTF_stanlay_paraPoints.cpp
+build $builddir/abeles_paraPoints.o : cxx $root/abeles_paraPoints.cpp
+build $builddir/standardTF_custLay_reflectivityCalculation.o : cxx $root/standardTF_custLay_reflectivityCalculation.cpp
+build $builddir/standardTF_custlay_single.o : cxx $root/standardTF_custlay_single.cpp
+build $builddir/loopCppCustlayWrapper_CustLaysingle.o : cxx $root/loopCppCustlayWrapper_CustLaysingle.cpp
+build $builddir/rmmissing.o : cxx $root/rmmissing.cpp
+build $builddir/standardTF_custlay_paraPoints.o : cxx $root/standardTF_custlay_paraPoints.cpp
+build $builddir/loopCppCustlayWrapper_CustLaypoints.o : cxx $root/loopCppCustlayWrapper_CustLaypoints.cpp
+build $builddir/standardTF_custXY_reflectivityCalculation.o : cxx $root/standardTF_custXY_reflectivityCalculation.cpp
+build $builddir/standardTF_custXY_single.o : cxx $root/standardTF_custXY_single.cpp
+build $builddir/loopCppCustlayWrapper_XYSingle.o : cxx $root/loopCppCustlayWrapper_XYSingle.cpp
+build $builddir/standardTF_custXY_paraPoints.o : cxx $root/standardTF_custXY_paraPoints.cpp
+build $builddir/loopCppCustlayWrapper_XYPoints.o : cxx $root/loopCppCustlayWrapper_XYPoints.cpp
+build $builddir/all.o : cxx $root/all.cpp
+build $builddir/textOut.o : cxx $root/textOut.cpp
+build $builddir/rand.o : cxx $root/rand.cpp
+build $builddir/nullAssignment.o : cxx $root/nullAssignment.cpp
+build $builddir/_coder_gwmcmc_compile_api.o : cxx $root/interface/_coder_gwmcmc_compile_api.cpp
+build $builddir/_coder_gwmcmc_compile_mex.o : cxx $root/interface/_coder_gwmcmc_compile_mex.cpp
+build $builddir/eml_int_forloop_overflow_check.o : cxx $root/eml_int_forloop_overflow_check.cpp
+build $builddir/strcmp.o : cxx $root/strcmp.cpp
+build $builddir/sumMatrixIncludeNaN.o : cxx $root/sumMatrixIncludeNaN.cpp
+build $builddir/acos.o : cxx $root/acos.cpp
+build $builddir/sqrt.o : cxx $root/sqrt.cpp
+build $builddir/sortrows.o : cxx $root/sortrows.cpp
+build $builddir/exp.o : cxx $root/exp.cpp
+build $builddir/eml_mtimes_helper.o : cxx $root/eml_mtimes_helper.cpp
+build $builddir/div.o : cxx $root/div.cpp
+build $builddir/unsafeSxfun.o : cxx $root/unsafeSxfun.cpp
+build $builddir/gwmcmc_compile_mexutil.o : cxx $root/gwmcmc_compile_mexutil.cpp
+build $builddir/_coder_gwmcmc_compile_info.o : cxx $root/interface/_coder_gwmcmc_compile_info.cpp
+build $builddir/cpp_mexapi_version.o : cxx $matlabdir/extern/version/cpp_mexapi_version.cpp
+
+# Link
+build $root/gwmcmc_compile_mex.mexmaci64 : linkxx $builddir/gwmcmc_compile_data.o $builddir/rt_nonfinite.o $builddir/gwmcmc_compile_initialize.o $builddir/gwmcmc_compile_terminate.o $builddir/gwmcmc_compile.o $builddir/randn.o $builddir/bsxfun.o $builddir/reflectivity_calculation_wrapper.o $builddir/standardTF_reflectivityCalculation.o $builddir/standardTF_stanLay_reflectivityCalculation.o $builddir/backSort.o $builddir/allocateLayersForContrast.o $builddir/standardTF_layers_core.o $builddir/groupLayers_Mod.o $builddir/indexShapeCheck.o $builddir/makeSLDProfiles.o $builddir/sum.o $builddir/asymconvstep.o $builddir/applyScalarFunction.o $builddir/resampleLayers.o $builddir/adaptive_new.o $builddir/linspace.o $builddir/find.o $builddir/repmat.o $builddir/any1.o $builddir/sortLE.o $builddir/shiftdata.o $builddir/callReflectivity.o $builddir/colon.o $builddir/data_resolution_polly.o $builddir/resolution_polly.o $builddir/chiSquared.o $builddir/standardTF_stanlay_paraPoints.o $builddir/abeles_paraPoints.o $builddir/standardTF_custLay_reflectivityCalculation.o $builddir/standardTF_custlay_single.o $builddir/loopCppCustlayWrapper_CustLaysingle.o $builddir/rmmissing.o $builddir/standardTF_custlay_paraPoints.o $builddir/loopCppCustlayWrapper_CustLaypoints.o $builddir/standardTF_custXY_reflectivityCalculation.o $builddir/standardTF_custXY_single.o $builddir/loopCppCustlayWrapper_XYSingle.o $builddir/standardTF_custXY_paraPoints.o $builddir/loopCppCustlayWrapper_XYPoints.o $builddir/all.o $builddir/textOut.o $builddir/rand.o $builddir/nullAssignment.o $builddir/_coder_gwmcmc_compile_api.o $builddir/_coder_gwmcmc_compile_mex.o $builddir/eml_int_forloop_overflow_check.o $builddir/strcmp.o $builddir/sumMatrixIncludeNaN.o $builddir/acos.o $builddir/sqrt.o $builddir/sortrows.o $builddir/exp.o $builddir/eml_mtimes_helper.o $builddir/div.o $builddir/unsafeSxfun.o $builddir/gwmcmc_compile_mexutil.o $builddir/_coder_gwmcmc_compile_info.o $builddir/cpp_mexapi_version.o 
