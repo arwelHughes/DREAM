@@ -1,4 +1,4 @@
-function testMain
+function chain = testMain()
 
 % global problemDef problemDef_cells problemDef_limits controls
 
@@ -65,6 +65,8 @@ toc
 disp('debug');
 
 ecornerplot(m,'names',paramNames);
+
+chain = m(:,:)';
 
 end
 
