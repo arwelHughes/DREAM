@@ -29,6 +29,11 @@ controls = controlsDef();
 disp('debug')
 [problemDef,paramNames] = packparams(problemDef,problemDef_cells,problemDef_limits,controls.checks);
 
+priorList = getFittedPriors(paramNames,priors,problemDef.fitconstr);
+
+% Debug - Set the prior...
+priorList(1,1:3) = {'gaussian',3,0.5};
+
 fitPars = problemDef.fitpars;
 
 initVal = fitPars(:);
@@ -43,7 +48,7 @@ end
 % ball(:,3) = ball(:,3) * 30;
 % mball = bsxfun(@plus,fitPars,ball);
 
-logpr = @(x) logPrior(x);
+logpr = @(x) gaussLogPrior(x);
 logl = @(x) logLike(x);
 
 p.BurnIn = 0.4000;
@@ -56,10 +61,11 @@ extras{1}= problemDef;
 extras{2} = problemDef_cells;% 
 extras{3} = problemDef_limits;
 extras{4} = controls;
+extras{5} = priorList;
 
 tic
 clc
-m = gwmcmc_compile_mex(initVal,50000,p,extras);
+m = gwmcmc_compile(initVal,50000,p,extras);
 toc
 
 disp('debug');

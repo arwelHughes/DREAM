@@ -1,0 +1,6 @@
+-------------- DREAM warning file --------------
+DREAM WARNING: Irreversible jump chain 4 at 1700 generations 
+DREAM WARNING: Irreversible jump chain 8 at 1800 generations 
+DREAM WARNING: Irreversible jump chain 7 at 2000 generations 
+DREAM WARNING: Irreversible jump chain 9 at 2300 generations 
+DREAM WARNING: Irreversible jump chain 5 at 3800 generations 

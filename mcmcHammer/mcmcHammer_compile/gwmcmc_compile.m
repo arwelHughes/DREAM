@@ -123,6 +123,8 @@ p.ThinChain = 10;
 
 Nwalkers=size(minit,2);
 
+bounds = cell2mat(extras{5}(:,4:5));
+
 if size(minit,1)*2>size(minit,2)
     error('GWMCMC:minitdimensions','Check minit dimensions.\nIt is recommended that there be atleast twice as many walkers in the ensemble as there are model dimension.')
 end
@@ -152,10 +154,10 @@ logP=nan(NPfun,Nwalkers,Nkeep);
 for wix=1:Nwalkers
     for fix=1:NPfun
         v=logPFuns(fix,minit(:,wix),extras);
-%         if islogical(v) %reformulate function so that false=-inf for logical constraints.
-%             v=-1/v;
-%             logPfuns{fix}=@(m)-1/logPfuns{fix}(m); %experimental implementation of experimental feature
-%         end
+        if islogical(v) %reformulate function so that false=-inf for logical constraints.
+            v=-1/v;
+            logPfuns{fix}=@(m)-1/logPfuns{fix}(m); %experimental implementation of experimental feature
+        end
         logP(fix,wix,1)=v;
     end
 end
@@ -229,6 +231,12 @@ for row=1:Nkeep
                 else
                     acceptfullstep=false;
                 end
+
+                % Check whether the samples are in range. 
+                if (any(proposedm(:,wix) < bounds(:,1)) || any(proposedm(:,wix) > bounds(:,2)))
+                    acceptfullstep = 0;
+                end
+
                 if acceptfullstep
                     curm(:,wix)=proposedm(:,wix); curlogP(:,wix)=proposedlogP;
                 else
@@ -314,8 +322,9 @@ function out = logPFuns(which,in,extras)
 if which == 1
     out = logLike(in,extras);
 else
-    tempOut = logPrior(in,extras);
-    out = double(tempOut);
+    tempOut = gaussLogPrior(in,extras);
+    out = tempOut;
+    % out = double(tempOut);
 end
 
 end
@@ -385,5 +394,44 @@ logPrior = any(thisLogical);
 %logPrior = thisLogical;
 
 end
+
+
+% ---------------------------------------------
+
+function logPrior = gaussLogPrior(m,extras)
+
+
+% problemDef = extras{1};
+% problemDef_cells = extras{2};
+% problemDef_limits = extras{3};
+% controls = extras{4};
+priorList = extras{5};
+
+% Check to see if any m are outside the hard limits.
+% if so return logical 0 and exit. If not, process any Gaussian priors..
+% logi = true(length(m),1);
+% for i = 1:length(m)
+%     logi(i) = (m(i) > priorList{i,4}) && (m(i) < priorList{i,5});
+% end
+% 
+% if any(logi == false)
+%     logPrior = false;
+%     return
+% end
+
+% All are in range, so check for Gaussian priors....
+% We pick out any priors that are Gaussians and calculate the mvnpdf
+gaussPriors = find(strcmpi(priorList(:,1),'gaussian'));
+
+mus = priorList{gaussPriors,2};
+sigs = priorList{gaussPriors,3};
+
+pdf = mvnpdf(m(gaussPriors),mus,sigs);
+
+logPrior = pdf;%log(pdf);
+
+
+end
+
 
 
