@@ -2,8 +2,9 @@
 %clear
 
 % Make the problem
-problem = r1ToProjectClass('original_dspc_bilayer.mat');
-problem.setParameter(12,'fit',false);
+%problem = r1ToProjectClass('original_dspc_bilayer.mat');
+problem = r1ToProjectClass('defaultProject.mat');
+%problem.setParameter(12,'fit',false);
 controls = controlsDef();
 [problem,results] = RAT(problem,controls);
 
